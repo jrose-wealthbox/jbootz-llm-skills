@@ -1,0 +1,139 @@
+#!/bin/sh
+
+set -u
+
+script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P) || exit 1
+repo_root=$(CDPATH='' cd -- "$script_dir/.." && pwd -P) || exit 1
+skills_dir="$repo_root/skills"
+adapters_dir="$repo_root/install/adapters"
+errors=0
+
+error() {
+  printf 'error: %s\n' "$*" >&2
+  errors=$((errors + 1))
+}
+
+validate_adapter() {
+  adapter=$1
+
+  if [ ! -f "$adapter" ]; then
+    error "adapter is not a regular file: $adapter"
+    return
+  fi
+
+  if [ ! -x "$adapter" ]; then
+    error "adapter is not executable: $adapter"
+    return
+  fi
+
+  target=$("$adapter")
+  adapter_status=$?
+
+  if [ "$adapter_status" -ne 0 ]; then
+    error "adapter failed: $adapter"
+    return
+  fi
+
+  case "$target" in
+    '')
+      error "adapter returned an empty destination: $adapter"
+      ;;
+    *'
+'*)
+      error "adapter returned more than one line: $adapter"
+      ;;
+    /*)
+      ;;
+    *)
+      error "adapter destination is not absolute: $adapter returned $target"
+      ;;
+  esac
+}
+
+if [ ! -d "$skills_dir" ]; then
+  error "skills directory does not exist: $skills_dir"
+else
+  for skill in "$skills_dir"/*; do
+    if [ ! -e "$skill" ] && [ ! -L "$skill" ]; then
+      continue
+    fi
+
+    name=${skill##*/}
+
+    case "$name" in
+      ''|*[!a-z0-9-]*)
+        error "invalid skill name '$name'; use lowercase letters, digits, and hyphens"
+        ;;
+    esac
+
+    if [ ! -d "$skill" ]; then
+      error "skill is not a directory: $skill"
+    elif [ ! -f "$skill/SKILL.md" ]; then
+      error "skill is missing a regular SKILL.md: $skill"
+    fi
+  done
+fi
+
+adapter_count=0
+if [ ! -d "$adapters_dir" ]; then
+  error "adapter directory does not exist: $adapters_dir"
+else
+  for adapter in "$adapters_dir"/*; do
+    if [ ! -e "$adapter" ] && [ ! -L "$adapter" ]; then
+      continue
+    fi
+
+    adapter_count=$((adapter_count + 1))
+    validate_adapter "$adapter"
+  done
+fi
+
+if [ "$adapter_count" -eq 0 ]; then
+  error "no installation adapters found in $adapters_dir"
+fi
+
+if [ "$errors" -ne 0 ]; then
+  printf 'Installation aborted with %s validation error(s).\n' "$errors" >&2
+  exit 1
+fi
+
+for adapter in "$adapters_dir"/*; do
+  agent=${adapter##*/}
+  target=$("$adapter")
+
+  if ! mkdir -p "$target"; then
+    error "could not create skill directory for $agent: $target"
+    continue
+  fi
+
+  for skill in "$skills_dir"/*; do
+    if [ ! -e "$skill" ] && [ ! -L "$skill" ]; then
+      continue
+    fi
+
+    name=${skill##*/}
+    destination="$target/$name"
+
+    if [ -L "$destination" ]; then
+      linked_source=$(readlink "$destination")
+      if [ "$linked_source" = "$skill" ]; then
+        printf '%s: unchanged %s\n' "$agent" "$destination"
+      else
+        error "$agent conflict at $destination (links to $linked_source)"
+      fi
+    elif [ -e "$destination" ]; then
+      error "$agent conflict at $destination (existing file or directory)"
+    elif ln -s "$skill" "$destination"; then
+      printf '%s: linked %s -> %s\n' "$agent" "$destination" "$skill"
+    else
+      error "$agent could not create link at $destination"
+    fi
+  done
+done
+
+if [ "$errors" -ne 0 ]; then
+  printf 'Installation completed with %s conflict(s) or error(s).\n' "$errors" >&2
+  exit 1
+fi
+
+printf 'All personal skills are installed. Start a new agent session to use them.\n'

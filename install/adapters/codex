@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -n "${CODEX_HOME:-}" ]; then
+  config_dir=$CODEX_HOME
+else
+  : "${HOME:?HOME must be set when CODEX_HOME is unset}"
+  config_dir="$HOME/.codex"
+fi
+
+printf '%s\n' "$config_dir/skills"

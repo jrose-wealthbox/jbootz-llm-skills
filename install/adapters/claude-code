@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
+  config_dir=$CLAUDE_CONFIG_DIR
+else
+  : "${HOME:?HOME must be set when CLAUDE_CONFIG_DIR is unset}"
+  config_dir="$HOME/.claude"
+fi
+
+printf '%s\n' "$config_dir/skills"
