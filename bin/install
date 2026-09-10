@@ -5,8 +5,21 @@ set -u
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P) || exit 1
 repo_root=$(CDPATH='' cd -- "$script_dir/.." && pwd -P) || exit 1
 skills_dir="$repo_root/skills"
+agents_dir="$repo_root/agents"
+global_file="$repo_root/global/global.md"
 adapters_dir="$repo_root/install/adapters"
+begin_marker='<!-- BEGIN jbootz-llm-skills global instructions -->'
+end_marker='<!-- END jbootz-llm-skills global instructions -->'
 errors=0
+block_file=''
+
+cleanup() {
+  if [ -n "$block_file" ] && [ -f "$block_file" ]; then
+    rm -f "$block_file"
+  fi
+}
+
+trap cleanup EXIT HUP INT TERM
 
 error() {
   printf 'error: %s\n' "$*" >&2
@@ -50,6 +63,201 @@ validate_adapter() {
   esac
 }
 
+global_target_for() {
+  agent=$1
+  skills_target=$2
+  config_dir=$(dirname "$skills_target")
+
+  case "$agent" in
+    claude-code)
+      printf '%s/CLAUDE.md\n' "$config_dir"
+      ;;
+    codex)
+      printf '%s/AGENTS.md\n' "$config_dir"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+manage_global_instructions() {
+  agent=$1
+  skills_target=$2
+  global_target=$(global_target_for "$agent" "$skills_target") || {
+    error "no global instruction target is configured for $agent"
+    return 1
+  }
+
+  config_dir=$(dirname "$global_target")
+  if ! mkdir -p "$config_dir"; then
+    error "could not create global instruction directory for $agent: $config_dir"
+    return 1
+  fi
+
+  if [ -L "$global_target" ]; then
+    error "$agent conflict at $global_target (existing symlink)"
+    return 1
+  elif [ -e "$global_target" ] && [ ! -f "$global_target" ]; then
+    error "$agent conflict at $global_target (existing file or directory)"
+    return 1
+  fi
+
+  if [ ! -e "$global_target" ]; then
+    temp_file=$(mktemp "${global_target}.jbootz-llm-skills.XXXXXX") || {
+      error "could not create temporary global instruction file for $agent"
+      return 1
+    }
+
+    if ! cat "$block_file" > "$temp_file" || ! mv "$temp_file" "$global_target"; then
+      rm -f "$temp_file"
+      error "could not create global instruction file for $agent: $global_target"
+      return 1
+    fi
+
+    printf '%s: added global instructions %s\n' "$agent" "$global_target"
+    return 0
+  fi
+
+  begin_count=$(grep -Fxc "$begin_marker" "$global_target" 2>/dev/null || true)
+  end_count=$(grep -Fxc "$end_marker" "$global_target" 2>/dev/null || true)
+
+  if [ "$begin_count" -eq 0 ] && [ "$end_count" -eq 0 ]; then
+    temp_file=$(mktemp "${global_target}.jbootz-llm-skills.XXXXXX") || {
+      error "could not create temporary global instruction file for $agent"
+      return 1
+    }
+
+    if ! { cat "$global_target"; printf '\n\n'; cat "$block_file"; } > "$temp_file" || ! mv "$temp_file" "$global_target"; then
+      rm -f "$temp_file"
+      error "could not append global instructions for $agent: $global_target"
+      return 1
+    fi
+
+    printf '%s: appended global instructions to %s\n' "$agent" "$global_target"
+    return 0
+  fi
+
+  if [ "$begin_count" -ne 1 ] || [ "$end_count" -ne 1 ]; then
+    error "$agent global instruction markers are duplicated or incomplete in $global_target"
+    return 1
+  fi
+
+  temp_file=$(mktemp "${global_target}.jbootz-llm-skills.XXXXXX") || {
+    error "could not create temporary global instruction file for $agent"
+    return 1
+  }
+
+  if ! awk -v begin="$begin_marker" -v end="$end_marker" -v block="$block_file" '
+    $0 == begin {
+      if (in_block || replaced) exit 1
+      while ((getline line < block) > 0) print line
+      close(block)
+      in_block = 1
+      replaced = 1
+      next
+    }
+    $0 == end {
+      if (!in_block) exit 1
+      in_block = 0
+      next
+    }
+    in_block { next }
+    { print }
+    END {
+      if (in_block || !replaced) exit 1
+    }
+  ' "$global_target" > "$temp_file"; then
+    rm -f "$temp_file"
+    error "$agent global instruction markers are out of order in $global_target"
+    return 1
+  fi
+
+  if cmp -s "$temp_file" "$global_target"; then
+    rm -f "$temp_file"
+    printf '%s: unchanged global instructions %s\n' "$agent" "$global_target"
+  elif mv "$temp_file" "$global_target"; then
+    printf '%s: updated global instructions %s\n' "$agent" "$global_target"
+  else
+    rm -f "$temp_file"
+    error "could not update global instructions for $agent: $global_target"
+    return 1
+  fi
+}
+
+link_source() {
+  agent=$1
+  source=$2
+  destination=$3
+
+  if [ -L "$destination" ]; then
+    linked_source=$(readlink "$destination")
+    if [ "$linked_source" = "$source" ]; then
+      printf '%s: unchanged %s\n' "$agent" "$destination"
+    else
+      error "$agent conflict at $destination (links to $linked_source)"
+    fi
+  elif [ -e "$destination" ]; then
+    error "$agent conflict at $destination (existing file or directory)"
+  elif ln -s "$source" "$destination"; then
+    printf '%s: linked %s -> %s\n' "$agent" "$destination" "$source"
+  else
+    error "$agent could not create link at $destination"
+  fi
+}
+
+install_agent_definitions() {
+  agent=$1
+  skills_target=$2
+  config_dir=$(dirname "$skills_target")
+  destination_dir="$config_dir/agents"
+
+  case "$agent" in
+    claude-code)
+      definition_file='claude-code.md'
+      destination_suffix='.md'
+      ;;
+    codex)
+      definition_file='codex.toml'
+      destination_suffix='.toml'
+      ;;
+    *)
+      error "no agent definition format is configured for $agent"
+      return 1
+      ;;
+  esac
+
+  if ! mkdir -p "$destination_dir"; then
+    error "could not create agent directory for $agent: $destination_dir"
+    return 1
+  fi
+
+  for definition in "$agents_dir"/*; do
+    if [ ! -e "$definition" ] && [ ! -L "$definition" ]; then
+      continue
+    fi
+
+    name=${definition##*/}
+    source="$definition/$definition_file"
+    if [ ! -f "$source" ]; then
+      continue
+    fi
+
+    link_source "$agent" "$source" "$destination_dir/$name$destination_suffix"
+  done
+}
+
+if [ ! -f "$global_file" ]; then
+  error "global instruction source does not exist: $global_file"
+else
+  global_begin_count=$(grep -Fxc "$begin_marker" "$global_file" 2>/dev/null || true)
+  global_end_count=$(grep -Fxc "$end_marker" "$global_file" 2>/dev/null || true)
+
+  if [ "$global_begin_count" -ne 0 ] || [ "$global_end_count" -ne 0 ]; then
+    error "global instruction source contains reserved managed markers: $global_file"
+  fi
+fi
+
 if [ ! -d "$skills_dir" ]; then
   error "skills directory does not exist: $skills_dir"
 else
@@ -70,6 +278,43 @@ else
       error "skill is not a directory: $skill"
     elif [ ! -f "$skill/SKILL.md" ]; then
       error "skill is missing a regular SKILL.md: $skill"
+    fi
+  done
+fi
+
+if [ ! -d "$agents_dir" ]; then
+  error "agents directory does not exist: $agents_dir"
+else
+  for definition in "$agents_dir"/*; do
+    if [ ! -e "$definition" ] && [ ! -L "$definition" ]; then
+      continue
+    fi
+
+    name=${definition##*/}
+
+    case "$name" in
+      ''|*[!a-z0-9-]*)
+        error "invalid agent name '$name'; use lowercase letters, digits, and hyphens"
+        ;;
+    esac
+
+    if [ ! -d "$definition" ]; then
+      error "agent is not a directory: $definition"
+      continue
+    fi
+
+    definition_count=0
+    for source in "$definition/codex.toml" "$definition/claude-code.md"; do
+      if [ -e "$source" ] || [ -L "$source" ]; then
+        definition_count=$((definition_count + 1))
+        if [ ! -f "$source" ]; then
+          error "agent definition is not a regular file: $source"
+        fi
+      fi
+    done
+
+    if [ "$definition_count" -eq 0 ]; then
+      error "agent has no host definitions: $definition"
     fi
   done
 fi
@@ -97,9 +342,27 @@ if [ "$errors" -ne 0 ]; then
   exit 1
 fi
 
+block_file=$(mktemp "${TMPDIR:-/tmp}/jbootz-llm-skills-global.XXXXXX") || {
+  error "could not create temporary global instruction block"
+  exit 1
+}
+
+if ! {
+  printf '%s\n' "$begin_marker"
+  cat "$global_file"
+  printf '\n%s\n' "$end_marker"
+} > "$block_file"; then
+  error "could not build global instruction block"
+  exit 1
+fi
+
 for adapter in "$adapters_dir"/*; do
   agent=${adapter##*/}
   target=$("$adapter")
+
+  if ! manage_global_instructions "$agent" "$target"; then
+    continue
+  fi
 
   if ! mkdir -p "$target"; then
     error "could not create skill directory for $agent: $target"
@@ -114,21 +377,10 @@ for adapter in "$adapters_dir"/*; do
     name=${skill##*/}
     destination="$target/$name"
 
-    if [ -L "$destination" ]; then
-      linked_source=$(readlink "$destination")
-      if [ "$linked_source" = "$skill" ]; then
-        printf '%s: unchanged %s\n' "$agent" "$destination"
-      else
-        error "$agent conflict at $destination (links to $linked_source)"
-      fi
-    elif [ -e "$destination" ]; then
-      error "$agent conflict at $destination (existing file or directory)"
-    elif ln -s "$skill" "$destination"; then
-      printf '%s: linked %s -> %s\n' "$agent" "$destination" "$skill"
-    else
-      error "$agent could not create link at $destination"
-    fi
+    link_source "$agent" "$skill" "$destination"
   done
+
+  install_agent_definitions "$agent" "$target"
 done
 
 if [ "$errors" -ne 0 ]; then

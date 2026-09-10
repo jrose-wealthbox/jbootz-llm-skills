@@ -1,8 +1,8 @@
-# jbootz LLM skills
+# jbootz LLM skills and agents
 
-Personal, project-independent skills for coding agents. This repository is the
-source of truth; installation creates symlinks rather than copies, so edits are
-available to new agent sessions immediately.
+Personal, project-independent skills and shared instructions for coding agents.
+This repository is the source of truth; installation creates skill symlinks and
+managed instruction blocks rather than replacing agent configuration files.
 
 ## Supported agents
 
@@ -10,7 +10,16 @@ available to new agent sessions immediately.
 - Codex CLI: `${CODEX_HOME:-$HOME/.codex}/skills`
 
 Each skill is linked into each agent's native user-level skill directory. The
-installer preserves unrelated skills already present there.
+installer preserves unrelated skills already present there. Shared instructions
+come from `global/global.md` and are managed in:
+
+- Claude Code: `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/CLAUDE.md`
+- Codex CLI: `${CODEX_HOME:-$HOME/.codex}/AGENTS.md`
+
+Custom agents are installed alongside those skills:
+
+- Claude Code: `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/agents`
+- Codex CLI: `${CODEX_HOME:-$HOME/.codex}/agents`
 
 ## Install
 
@@ -19,11 +28,32 @@ make install
 ```
 
 You can also run `./bin/install` directly. The command is idempotent: existing
-correct links are left unchanged. Files, directories, or links at conflicting
-destinations are reported and never overwritten.
+correct links and managed instruction blocks are left unchanged. Files,
+directories, or links at conflicting skill or instruction destinations are
+reported and never overwritten.
+
+The installer wraps the contents of `global/global.md` in a marked block. If a
+target instruction file does not exist, it creates the file. If the file exists
+without the block, it appends the block. On later installs, it replaces only the
+block so user-authored content outside it remains untouched. Duplicated,
+incomplete, or out-of-order markers are treated as an error and are not
+modified.
+
+The managed markers are:
+
+```text
+<!-- BEGIN jbootz-llm-skills global instructions -->
+<!-- END jbootz-llm-skills global instructions -->
+```
+
+The content is copied into both host files instead of using an import directive:
+Claude Code supports `@path` imports, but Codex's official instruction-file
+documentation does not define an equivalent portable import syntax.
 
 Run the installer again after adding or renaming a skill. Editing an existing
 skill requires no reinstall; start a new agent session to pick up the change.
+Edit `global/global.md` and run the installer again to update shared
+instructions. Adding or renaming an agent requires reinstalling.
 
 ## Skills
 
@@ -47,6 +77,27 @@ The response should be exactly `Hello from jbootz-helloworld!`.
 
 Secret Gists are unlisted, not access-controlled. Anyone with the URL can read
 one; do not use this workflow for content that cannot be shared that way.
+
+## Agents
+
+Every direct child of `agents/` is one named agent. Agent definitions are
+host-specific because Codex and Claude Code use different file formats:
+
+```text
+agents/<agent-name>/codex.toml       # Codex CLI
+agents/<agent-name>/claude-code.md   # Claude Code
+```
+
+Each definition is optional for a host, but every agent must provide at least
+one definition. The installer links each available definition into the native
+user-level `agents/` directory and preserves conflicting files.
+
+The included `scout` agent is deliberately narrow. It uses Codex's
+`gpt-5.6-luna` model at medium reasoning effort to run bounded mechanical
+checks, parse noisy output, and return compressed evidence. It is instructed
+not to diagnose failures or edit source files; the parent agent owns those
+decisions. The Claude Code definition uses its low-cost `haiku` model as the
+closest host-native equivalent.
 
 ## Add another coding agent
 

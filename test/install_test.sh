@@ -15,7 +15,7 @@ fail() {
 copy_fixture() {
   fixture=$1
   mkdir -p "$fixture"
-  cp -R "$repo_root/bin" "$repo_root/install" "$repo_root/skills" "$fixture/"
+  cp -R "$repo_root/agents" "$repo_root/bin" "$repo_root/global" "$repo_root/install" "$repo_root/skills" "$fixture/"
   fixture=$(CDPATH='' cd -- "$fixture" && pwd -P)
 }
 
@@ -26,6 +26,13 @@ assert_link_to() {
   [ -L "$link" ] || fail "expected symlink: $link"
   actual=$(readlink "$link")
   [ "$actual" = "$expected" ] || fail "$link points to $actual, expected $expected"
+}
+
+assert_contains() {
+  file=$1
+  expected=$2
+
+  rg -F --quiet -- "$expected" "$file" || fail "$file does not contain: $expected"
 }
 
 fixture="$test_root/basic-repo"
@@ -45,30 +52,98 @@ for skill in "$fixture/skills"/*; do
   assert_link_to "$codex_root/skills/$name" "$skill"
 done
 
+assert_link_to "$claude_root/agents/scout.md" "$fixture/agents/scout/claude-code.md"
+assert_link_to "$codex_root/agents/scout.toml" "$fixture/agents/scout/codex.toml"
+
+for global_file in "$claude_root/CLAUDE.md" "$codex_root/AGENTS.md"; do
+  [ -f "$global_file" ] || fail "missing managed global instructions: $global_file"
+  assert_contains "$global_file" '<!-- BEGIN jbootz-llm-skills global instructions -->'
+  assert_contains "$global_file" 'This file is the canonical source for shared instructions.'
+  assert_contains "$global_file" '<!-- END jbootz-llm-skills global instructions -->'
+done
+
+{
+  printf '%s\n' 'user Claude instructions before'
+  cat "$claude_root/CLAUDE.md"
+  printf '%s\n' 'user Claude instructions after'
+} > "$test_root/claude-global-with-user-content"
+mv "$test_root/claude-global-with-user-content" "$claude_root/CLAUDE.md"
+
+{
+  printf '%s\n' 'user Codex instructions before'
+  cat "$codex_root/AGENTS.md"
+  printf '%s\n' 'user Codex instructions after'
+} > "$test_root/codex-global-with-user-content"
+mv "$test_root/codex-global-with-user-content" "$codex_root/AGENTS.md"
+
+cp "$claude_root/CLAUDE.md" "$test_root/claude-global-before-second-install"
+cp "$codex_root/AGENTS.md" "$test_root/codex-global-before-second-install"
+
 second_output=$(CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install")
 case "$second_output" in
   *'claude-code: unchanged'*'codex: unchanged'*) ;;
   *) fail "second install was not idempotent" ;;
 esac
 
+cmp -s "$claude_root/CLAUDE.md" "$test_root/claude-global-before-second-install" || fail "second install changed Claude global instructions"
+cmp -s "$codex_root/AGENTS.md" "$test_root/codex-global-before-second-install" || fail "second install changed Codex global instructions"
+
+printf '%s\n' 'Updated canonical instructions.' > "$fixture/global/global.md"
+CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install" >/dev/null
+assert_contains "$claude_root/CLAUDE.md" 'Updated canonical instructions.'
+assert_contains "$codex_root/AGENTS.md" 'Updated canonical instructions.'
+assert_contains "$claude_root/CLAUDE.md" 'user Claude instructions before'
+assert_contains "$claude_root/CLAUDE.md" 'user Claude instructions after'
+assert_contains "$codex_root/AGENTS.md" 'user Codex instructions before'
+assert_contains "$codex_root/AGENTS.md" 'user Codex instructions after'
+if rg -F --quiet -- 'This file is the canonical source for shared instructions.' "$claude_root/CLAUDE.md"; then
+  fail "Claude global instructions were not replaced"
+fi
+[ "$(rg -F --count 'Updated canonical instructions.' "$claude_root/CLAUDE.md")" = '1' ] || fail "Claude global instructions were duplicated"
+
 fixture="$test_root/conflict-repo"
 copy_fixture "$fixture"
 claude_root="$test_root/conflict-claude"
 codex_root="$test_root/conflict-codex"
 mkdir -p "$claude_root/skills"
+mkdir -p "$codex_root"
 printf 'keep me\n' > "$claude_root/skills/jbootz-helloworld"
+mkdir -p "$claude_root/agents"
+printf 'keep this agent\n' > "$claude_root/agents/scout.md"
+printf '%s\n' 'user Claude instructions' > "$claude_root/CLAUDE.md"
+printf '%s\n' 'user Codex instructions' > "$codex_root/AGENTS.md"
 
 if CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install" >"$test_root/conflict-output" 2>&1; then
   fail "install succeeded despite a destination conflict"
 fi
 
 [ "$(cat "$claude_root/skills/jbootz-helloworld")" = 'keep me' ] || fail "conflict was overwritten"
+[ "$(cat "$claude_root/agents/scout.md")" = 'keep this agent' ] || fail "agent conflict was overwritten"
+assert_contains "$claude_root/CLAUDE.md" 'user Claude instructions'
+assert_contains "$codex_root/AGENTS.md" 'user Codex instructions'
 assert_link_to "$codex_root/skills/jbootz-helloworld" "$fixture/skills/jbootz-helloworld"
+assert_link_to "$codex_root/agents/scout.toml" "$fixture/agents/scout/codex.toml"
+
+fixture="$test_root/malformed-repo"
+copy_fixture "$fixture"
+claude_root="$test_root/malformed-claude"
+codex_root="$test_root/malformed-codex"
+mkdir -p "$claude_root"
+printf '%s\n' '<!-- BEGIN jbootz-llm-skills global instructions -->' '<!-- BEGIN jbootz-llm-skills global instructions -->' > "$claude_root/CLAUDE.md"
+cp "$claude_root/CLAUDE.md" "$test_root/malformed-claude-before"
+
+if CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install" >"$test_root/malformed-output" 2>&1; then
+  fail "install accepted duplicated managed markers"
+fi
+
+cmp -s "$claude_root/CLAUDE.md" "$test_root/malformed-claude-before" || fail "malformed Claude file was modified"
 
 fixture="$test_root/invalid-repo"
 copy_fixture "$fixture"
 mkdir -p "$fixture/skills/Bad_Name"
 printf '%s\n' '---' 'name: Bad_Name' 'description: invalid test skill' '---' > "$fixture/skills/Bad_Name/SKILL.md"
+mkdir -p "$fixture/agents/Bad_Name"
+printf '%s\n' 'name = "bad"' > "$fixture/agents/Bad_Name/codex.toml"
 claude_root="$test_root/invalid-claude"
 codex_root="$test_root/invalid-codex"
 
@@ -81,12 +156,14 @@ fi
 
 fixture="$test_root/empty-repo"
 copy_fixture "$fixture"
-rm -rf "$fixture/skills"
-mkdir -p "$fixture/skills"
+rm -rf "$fixture/agents" "$fixture/skills"
+mkdir -p "$fixture/agents" "$fixture/skills"
 claude_root="$test_root/empty-claude"
 codex_root="$test_root/empty-codex"
 CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install" >/dev/null
 [ -d "$claude_root/skills" ] || fail "empty install did not create Claude skill directory"
 [ -d "$codex_root/skills" ] || fail "empty install did not create Codex skill directory"
+[ -d "$claude_root/agents" ] || fail "empty install did not create Claude agent directory"
+[ -d "$codex_root/agents" ] || fail "empty install did not create Codex agent directory"
 
 printf 'PASS: installer behavior\n'
