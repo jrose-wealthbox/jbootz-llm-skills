@@ -1,8 +1,9 @@
 # jbootz LLM skills and agents
 
 Personal, project-independent skills and shared instructions for coding agents.
-This repository is the source of truth; installation creates skill symlinks and
-managed instruction blocks rather than replacing agent configuration files.
+This repository is the source of truth; installation creates skill symlinks,
+managed instruction blocks, and rendered native agent definitions without
+replacing unrelated agent configuration.
 
 ## Supported agents
 
@@ -28,9 +29,9 @@ make install
 ```
 
 You can also run `./bin/install` directly. The command is idempotent: existing
-correct links and managed instruction blocks are left unchanged. Files,
-directories, or links at conflicting skill or instruction destinations are
-reported and never overwritten.
+correct links, managed instruction blocks, and rendered agent definitions are
+left unchanged. Unmanaged files, directories, or links at conflicting
+destinations are reported and never overwritten.
 
 The installer wraps the contents of `global/global.md` in a marked block. If a
 target instruction file does not exist, it creates the file. If the file exists
@@ -52,8 +53,9 @@ documentation does not define an equivalent portable import syntax.
 
 Run the installer again after adding or renaming a skill. Editing an existing
 skill requires no reinstall; start a new agent session to pick up the change.
-Edit `global/global.md` and run the installer again to update shared
-instructions. Adding or renaming an agent requires reinstalling.
+Edit `global/global.md` or an agent's canonical source and run the installer
+again to render the changes. Adding or renaming an agent also requires
+reinstalling.
 
 ## Skills
 
@@ -80,17 +82,19 @@ one; do not use this workflow for content that cannot be shared that way.
 
 ## Agents
 
-Every direct child of `agents/` is one named agent. Agent definitions are
-host-specific because Codex and Claude Code use different file formats:
+Every direct child of `agents/` is one named agent with shared metadata,
+instructions, and host-specific settings:
 
 ```text
-agents/<agent-name>/codex.toml       # Codex CLI
-agents/<agent-name>/claude-code.md   # Claude Code
+agents/<agent-name>/agent.yml        # metadata and host settings
+agents/<agent-name>/instructions.md  # shared behavior
 ```
 
-Each definition is optional for a host, but every agent must provide at least
-one definition. The installer links each available definition into the native
-user-level `agents/` directory and preserves conflicting files.
+Each manifest enables at least one supported host. During installation,
+`bin/render-agent` validates the canonical source and renders the host's native
+format into its user-level `agents/` directory. Managed files are updated
+atomically; unrelated files and symlinks remain untouched. Legacy symlinks
+created by older versions of this repository are migrated to physical files.
 
 The included `scout` agent is deliberately narrow. It uses Codex's
 `gpt-5.6-luna` model at medium reasoning effort to run bounded mechanical

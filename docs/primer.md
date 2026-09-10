@@ -128,12 +128,12 @@ For a skill intended to work in both hosts:
 
 This repository's current skills follow that portable pattern.
 
-The repository can also install custom agents. Agent definitions remain
-host-specific because Codex uses TOML while Claude Code uses Markdown:
+The repository can also install custom agents. Their behavior has one canonical
+source even though Codex requires TOML and Claude Code requires Markdown:
 
 ~~~text
-agents/<agent-name>/codex.toml
-agents/<agent-name>/claude-code.md
+agents/<agent-name>/agent.yml
+agents/<agent-name>/instructions.md
 ~~~
 
 The included `scout` agent is a deliberately narrow, low-cost worker for
@@ -165,10 +165,10 @@ global/global.md                         canonical source
     ├── $CODEX_HOME/AGENTS.md             managed Codex block
     └── $CLAUDE_CONFIG_DIR/CLAUDE.md      managed Claude Code block
 
-agents/scout/codex.toml                  Codex Scout definition
-agents/scout/claude-code.md              Claude Code Scout definition
-    ├── $CODEX_HOME/agents/scout.toml    symlinked Codex agent
-    └── $CLAUDE_CONFIG_DIR/agents/scout.md symlinked Claude agent
+agents/scout/agent.yml                   shared metadata and host settings
+agents/scout/instructions.md             shared Scout behavior
+    ├── $CODEX_HOME/agents/scout.toml    rendered Codex agent
+    └── $CLAUDE_CONFIG_DIR/agents/scout.md rendered Claude agent
 ~~~
 
 `make install` creates each file when absent, appends a marked block when the
@@ -462,9 +462,9 @@ make install
 ~~~
 
 Then start a new agent session if the host does not detect the new skill,
-agent, or instruction change immediately. Skill and agent definition edits do
-not require reinstalling because they are symlinked; changes to
-`global/global.md` do.
+agent, or instruction change immediately. Skill edits do not require
+reinstalling because they are symlinked. Agent and `global/global.md` edits do,
+because the installer renders or copies them into native configuration files.
 
 The existing skills illustrate two useful categories:
 

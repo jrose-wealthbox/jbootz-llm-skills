@@ -1,0 +1,15 @@
+name: Jbootz.SCOUT
+description: Runs bounded mechanical checks and returns compressed evidence without diagnosing or editing.
+instructions: instructions.md
+hosts:
+  claude-code:
+    model: haiku
+    tools:
+      - Bash
+      - Read
+      - Grep
+      - Glob
+  codex:
+    model: gpt-5.6-luna
+    model_reasoning_effort: medium
+    sandbox_mode: workspace-write
