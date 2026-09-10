@@ -16,4 +16,5 @@ Give Scout the exact command, working directory, constraints, and required
 report format. Scout observes and compresses evidence; the parent agent remains
 responsible for diagnosis, decisions, and edits. Do not delegate ambiguous
 requirements, root-cause analysis, architectural decisions, security
-judgments, or source changes to Scout.
+judgments, code-quality validation, correctness validation, or source changes to
+Scout unless the user specifically asked for that review.
