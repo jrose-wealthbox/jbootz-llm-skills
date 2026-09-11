@@ -26,7 +26,7 @@ Linear acceptance criteria are an independent product oracle; passing tests do n
 Every plan must name:
 
 - the exact worktree-URL command;
-- the health check, resolved Rails URL, and condition requiring `bin/wealthbox up`;
+- the health check, resolved Rails URL, and condition requiring `bin/wealthbox up -d --wait`;
 - dependency, feature-flag, and seed-data setup;
 - the seeded account/user and `local-account-login` flow;
 - required role, allowlist, or rollout state.
@@ -45,13 +45,13 @@ bin/wealthbox exec bundle install
 
 Never include bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compose`.
 
-Do not prescribe `bin/wealthbox up` unconditionally. Inspect `bin/wealthbox status` and probe the resolved Rails `/healthcheck`; run `bin/wealthbox up` only when the probe fails, the URL is unavailable, or the request explicitly requires a restart/rebuild.
+Do not prescribe `bin/wealthbox up -d --wait` unconditionally. Inspect `bin/wealthbox status` and probe the resolved Rails `/healthcheck`; run `bin/wealthbox up -d --wait` only when the probe fails, the URL is unavailable, or the request explicitly requires a restart/rebuild. Use the detached, health-waiting form so follow-up status and browser steps run after startup completes.
 
 If a flag or seed command cannot be verified in the repository, mark the prerequisite blocked; never invent commands.
 
 ## Browser steps
 
-Each step must state the exact page or visible label, action, expected and prohibited visible results, and tool (`agent-browser` or headless Playwright).
+Each step must state the exact page or visible label, action, expected and prohibited visible results, the readiness wait before the next snapshot, and tool (`agent-browser` or headless Playwright).
 
 Example:
 

@@ -66,9 +66,9 @@ rails_app_url="$(jq -r '.services.rails.url // .services.rails.localhost // empt
 
 if [ -n "$rails_health_url" ] && curl --fail --silent --show-error --max-time 5 \
   "$rails_health_url/healthcheck" >/dev/null 2>&1; then
-  echo "Rails is already healthy at $rails_health_url; skipping bin/wealthbox up."
+  echo "Rails is already healthy at $rails_health_url; skipping bin/wealthbox up -d --wait."
 else
-  bin/wealthbox up
+  bin/wealthbox up -d --wait
   status_json="$(bin/wealthbox status)"
   rails_app_url="$(jq -r '.services.rails.url // .services.rails.localhost // empty' <<<"$status_json")"
 fi
@@ -76,7 +76,7 @@ fi
 echo "QA application URL: $rails_app_url"
 ```
 
-Run `bin/wealthbox up` only when the probe fails, status lacks a usable URL, or the request explicitly requires restart/rebuild. If a later check shows a stale or unhealthy stack, run it once and re-probe; do not repeat speculatively. Do not call `bin/wealthbox status rails --url` or duplicate status calls when JSON already provides `services.rails.url`.
+Run `bin/wealthbox up -d --wait` only when the probe fails, status lacks a usable URL, or the request explicitly requires restart/rebuild. The detached, health-waiting form is required so the QA shell block can continue to its post-start status refresh. If a later check shows a stale or unhealthy stack, run it once and re-probe; do not repeat speculatively. Do not call `bin/wealthbox status rails --url` or duplicate status calls when JSON already provides `services.rails.url`.
 
 If Docker access is denied, request the wrapper permission once. Inspect shared-service configuration warnings before stopping or restarting shared services.
 
@@ -95,11 +95,17 @@ Use `local-account-login` for seeded users such as `bill@patriot.com`; never ret
 Use accessibility snapshots and stable visible labels:
 
 ```bash
+agent_browser_session="$(agent-browser session id --scope worktree --prefix crm-qa)"
+export AGENT_BROWSER_SESSION="$agent_browser_session"
 agent-browser open <URL>
+agent-browser wait --load domcontentloaded
 agent-browser snapshot -i
 agent-browser click @eN
+agent-browser wait --load networkidle
 agent-browser snapshot -i
 ```
+
+Replace `<URL>` and `@eN` with the resolved application URL and a ref from the immediately preceding snapshot. Prefer a scenario-specific expected-text or URL wait when one is known; otherwise use the shown load wait. Re-snapshot after every navigation or dynamic re-render before using another ref.
 
 For each scenario, record the starting page, exact element and pre-click state, expected visible result, absence of internal XML/provider payloads/IDs/implementation text, and a screenshot path when useful.
 
