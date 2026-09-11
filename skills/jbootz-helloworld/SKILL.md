@@ -1,6 +1,6 @@
 ---
 name: jbootz-helloworld
-description: Verify jbootz personal skills are installed by responding to an explicit hello-world skill test.
+description: Use when explicitly asked to use or test jbootz-helloworld.
 ---
 
 # jbootz Hello World

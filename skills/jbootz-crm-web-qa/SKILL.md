@@ -1,58 +1,42 @@
 ---
 name: jbootz-crm-web-qa
-description: Route Wealthbox crm-web QA planning through jbootz-crm-web-qa-checklist and execute complete plans using agent-browser, with explicit dependency, runtime, feature-flag, seed-data, login, and persisted-state verification. Use for local CRM-web QA, AI-agent QA, Generative Views, artifact actions, and PR validation. Use ONLY when working in `crm-web` repo.
+description: Use when executing or validating browser QA for a local Wealthbox crm-web change, including AI-agent, Generative View, artifact, or PR flows; only in the crm-web repository.
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, Task
 ---
 
 # Wealthbox QA
 
-Consume and execute a complete QA plan for the current CRM-web branch. `jbootz-crm-web-qa-checklist` is the source of truth for generating or repairing that plan.
+Execute a complete QA plan for the current CRM-web branch. `jbootz-crm-web-qa-checklist` owns plan content; this skill owns setup, execution, evidence, and cleanup.
 
 ## Mode routing
 
-- `plan` or no argument: apply `jbootz-crm-web-qa-checklist` to generate the plan, then stop without executing it.
-- `run` with an existing complete plan: preserve the plan unchanged and execute it.
-- `run` with an incomplete plan: preserve its correct content, apply `jbootz-crm-web-qa-checklist` only to fill the gaps, then execute it.
-- `run` without a plan: apply `jbootz-crm-web-qa-checklist` first, then execute the resulting plan.
-- If the user explicitly requests headless Playwright, use the repository Playwright workflow for that request. Otherwise, use `agent-browser` for browser interaction.
+- `plan` or no argument: apply `jbootz-crm-web-qa-checklist`, generate the plan, then stop.
+- `run` with a complete plan: preserve it unchanged and execute it.
+- `run` with an incomplete plan: preserve correct content, use the checklist only to fill gaps, then execute.
+- `run` without a plan: generate one with the checklist, then execute it.
+- Honor an explicit headless-Playwright request; otherwise use `agent-browser`.
 
-## Planning source and handoff
+When planning is required, load the checklist through the harness's normal skill mechanism; skill names are instruction sources, not callable functions. If unavailable, read the sibling `../jbootz-crm-web-qa-checklist/SKILL.md`; if neither is available, report planning blocked. Before execution, accept a plan only when its relevant environment, dependency, flag, seed, login, browser, and persisted-state instructions are concrete and consistent with the request and acceptance criteria.
 
-The checklist skill owns plan decisions. This skill owns execution: dependencies, runtime, setup, login, browser mechanics, persisted-state inspection, evidence, worker coordination, and cleanup.
+## Guardrails
 
-When planning is required, load and apply the checklist through the current harness's normal skill mechanism; treat the skill name as an instruction source, not a callable function. If that mechanism is unavailable, read the sibling `../jbootz-crm-web-qa-checklist/SKILL.md` and apply it. If neither is possible, report that plan generation is blocked rather than recreating its rules here.
+- UI text, a flash, spinner, or successful click is not proof; verify persisted state when backend or AI behavior is in scope.
+- Treat click timeouts as inconclusive until the next URL and accessibility snapshot are checked.
+- Never reset a seeded user's password through admin or invent seed commands/SQL.
+- Never clean or stage pre-existing worktree files, QA screenshots, `output/`, `.playwright-cli/`, or unrelated database drift.
 
-Before execution, confirm the plan has concrete environment, dependency, feature-flag, seed-data, login, browser, and persisted-state instructions relevant to the change and does not conflict with the user request or acceptance criteria. A plan satisfying that check is complete and must not be regenerated.
+## 0. Capture the baseline
 
-## Core principles
-
-- Browser output is not the sole source of truth.
-- A flash message, spinner, or successful click is insufficient proof.
-- Verify persisted backend state for backend or AI behavior.
-- Treat a click timeout as inconclusive until the next URL and accessibility snapshot are checked.
-- Never reset a seeded user’s password through admin.
-- Never invent seed commands or SQL.
-- Never stage QA screenshots, `output/`, `.playwright-cli/`, or unrelated database drift.
-
-## Step 0: Capture the baseline
-
-Before starting:
+Before setup:
 
 ```bash
 git status --short
 ```
 
-Record:
+Record the branch, HEAD, pre-existing files, and (after Step 2) whether the environment is Docker-backed or native. Do not clean or discard pre-existing files.
 
-- current branch;
-- current commit;
-- pre-existing worktree files;
-- whether the environment is Docker-backed or native (recorded during Step 2).
-
-Do not clean or discard pre-existing files.
-
-## Step 1: Dependency preflight
+## 1. Dependency preflight
 
 For Ruby/container work:
 
@@ -69,11 +53,11 @@ bin/wealthbox exec bundle check
 
 For JavaScript work, use Yarn through the wrapper only. If a command reports missing packages, run the repository-approved Yarn install through bin/wealthbox exec, then retry the original command.
 
-Do not run bare bundle, rails, rake, yarn, npm, npx, or docker compose.
+Never run bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compose`.
 
-## Step 2: Start and verify the environment only when necessary
+## 2. Verify the environment only when needed
 
-First inspect the current service state and probe the resolved Rails health endpoint. Record the application URL and runtime mode from this status result. `bin/wealthbox up` is intentionally conditional because it can rebuild or wait on the full local stack.
+Inspect service state and probe the resolved Rails health endpoint first. Record the application URL and runtime mode:
 
 ```bash
 status_json="$(bin/wealthbox status 2>/dev/null || true)"
@@ -92,48 +76,21 @@ fi
 echo "QA application URL: $rails_app_url"
 ```
 
-Run `bin/wealthbox up` only when the health probe fails, the status command cannot produce a usable URL, or the QA request explicitly requires a restart/rebuild. If a later browser or dependency check shows the running stack is stale or unhealthy, run `bin/wealthbox up` once and re-probe; do not repeat it speculatively.
+Run `bin/wealthbox up` only when the probe fails, status lacks a usable URL, or the request explicitly requires restart/rebuild. If a later check shows a stale or unhealthy stack, run it once and re-probe; do not repeat speculatively. Do not call `bin/wealthbox status rails --url` or duplicate status calls when JSON already provides `services.rails.url`.
 
-Do not run `bin/wealthbox status rails --url` or duplicate status calls when the JSON status already provides `services.rails.url`.
+If Docker access is denied, request the wrapper permission once. Inspect shared-service configuration warnings before stopping or restarting shared services.
 
-If the QA task changes feature-flag configuration or seed data, perform that setup explicitly even when startup is skipped, then verify the resulting state with a read-only runner or psql query.
+## 3. Prepare flags and seeds
 
-If Docker access is denied, request the required wrapper permission once. Do not repeatedly retry the same sandbox-blocked command.
+For each required flag or seed: locate the repository-supported command/helper, run it through `bin/wealthbox`, verify it with a read-only `bin/wealthbox runner` or `bin/wealthbox psql` query, and record the exact command and result. Do this even when Step 2 skips startup. If it cannot be established from the repository, mark the prerequisite blocked.
 
-If shared-service configuration differs from the worktree, inspect the warning before stopping or restarting shared services.
+For AI/Generative View QA, record the flag and enabled actor/account, view name and ID, seeded user/account, expected button label, and expected persisted artifact/action state.
 
-## Step 3: Prepare feature flags and seed data
+## 4. Log in
 
-For every required feature flag or seed:
+Use `local-account-login` for seeded users such as `bill@patriot.com`; never retrieve a user through admin to change its password. After login, verify the current URL, an accessibility snapshot, and a visible user/account indicator.
 
-1. Locate the existing repository-supported command or seed helper.
-2. Run it through bin/wealthbox.
-3. Verify the resulting state with a read-only bin/wealthbox runner or bin/wealthbox psql query.
-4. Record the exact command and verification result in the QA evidence.
-
-For AI/Generative View QA, explicitly record:
-
-- the feature flag name and enabled actor/account;
-- the seeded view name and ID;
-- the seeded user/account;
-- the expected button label;
-- the expected persisted artifact/action state.
-
-If the exact command cannot be established from the repository, mark the prerequisite blocked instead of fabricating a command.
-
-## Step 4: Log in
-
-Use the local-account-login skill for seeded users such as bill@patriot.com.
-
-Do not retrieve the user through admin and change their password.
-
-After login, verify the destination with:
-
-- the current URL;
-- an accessibility snapshot;
-- a visible user/account indicator.
-
-## Step 5: Execute browser scenarios
+## 5. Execute browser scenarios
 
 Use accessibility snapshots and stable visible labels:
 
@@ -144,59 +101,25 @@ agent-browser click @eN
 agent-browser snapshot -i
 ```
 
-For each scenario, record:
+For each scenario, record the starting page, exact element and pre-click state, expected visible result, absence of internal XML/provider payloads/IDs/implementation text, and a screenshot path when useful.
 
-1. starting page;
-2. exact element clicked;
-3. visible state immediately before the click;
-4. expected visible result;
-5. absence of internal XML, provider payloads, IDs, or implementation-only text;
-6. screenshot path when visual evidence is useful.
+For AI artifact actions, test each relevant surface separately: regular AI chat, AI agent chat, Generative View, and native/mobile serialization when shared serializers are changed.
 
-For AI artifact actions, test the relevant surfaces separately:
+## 6. Verify persisted state
 
-- regular AI chat;
-- AI agent chat;
-- Generative View;
-- native/mobile serialization when the diff touches shared serializers.
+After an action, use repository-native read-only inspection to verify that:
 
-## Step 6: Verify persisted state
-
-After an action, use repository-native read-only inspection to verify:
-
-- the action or run was persisted;
-- the user-facing display text is friendly;
-- content and content_segments contain the public representation;
-- content_raw retains provider-facing/raw action data;
-- no raw internal handoff XML is exposed;
-- the expected artifact/action was created exactly once.
+- the action/run exists and the expected artifact/action was created exactly once;
+- `content` and `content_segments` contain the public representation;
+- `content_raw` retains provider-facing/raw action data;
+- display text is friendly and no raw handoff XML is exposed.
 
 Do not claim success from UI text alone.
 
-## Step 7: Parallelization
+## 7. Coordinate workers
 
-At most one worker owns environment setup and dependency installation.
+One worker owns environment setup and dependency installation. Other workers may run independent scenarios only after receiving its evidence manifest. Do not have multiple workers install dependencies, start/stop shared services, seed the same data, rerun the same focused suite, or request the same elevated permission.
 
-Other workers may execute independent scenarios only after receiving the setup owner’s evidence manifest.
+## 8. Report and clean up
 
-Do not have multiple workers independently:
-
-- install dependencies;
-- start or stop shared services;
-- seed the same data;
-- rerun the same focused suite;
-- request the same elevated permission.
-
-## Step 8: Report
-
-Report:
-
-- prerequisites and exact commands;
-- browser scenarios and results;
-- persisted-state verification;
-- screenshots;
-- test commands and results;
-- known limitations;
-- whether the result is passed, failed, or inconclusive.
-
-Close browser sessions after QA. Do not destructively clean the worktree.
+Report prerequisites and exact commands, browser results, persisted-state verification, screenshots, test commands/results, limitations, and a `passed`, `failed`, or `inconclusive` conclusion. Close browser sessions after QA; do not destructively clean the worktree.

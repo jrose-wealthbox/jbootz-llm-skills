@@ -1,40 +1,37 @@
 ---
 name: jbootz-crm-web-qa-checklist
-description: Generate Wealthbox QA plans from a diff, PR, Linear issue, and repository conventions. Use when writing QA steps, updating a PR QA plan, or preparing agent-browser/headless browser QA. Use only when working in `crm-web` repo.
+description: Use when writing or revising browser QA plans for a local Wealthbox crm-web change, PR, or Linear issue, including agent-browser or Playwright QA; only in the crm-web repository.
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep
 ---
 
 # Wealthbox QA Checklist
 
-This skill is the source of truth for generating copy-paste-ready QA plans for the current CRM-web change. Plans must be suitable for execution by `jbootz-crm-web-qa`, `agent-browser`, or a human unfamiliar with CRM-web.
+Source of truth for copy-paste-ready plans runnable by `jbootz-crm-web-qa`, `agent-browser`, or a human unfamiliar with CRM-web.
 
-## Inputs
+## Evidence order
 
 Use these sources in order:
 
-1. the Linear acceptance criteria, if available;
-2. the PR description and current PR diff;
+1. Linear acceptance criteria, if available;
+2. PR description and current diff;
 3. repository instructions and relevant docs;
-4. the existing QA checklist patterns;
+4. existing QA patterns;
 5. similar historical PRs, if useful.
 
-Treat the Linear acceptance criteria as an independent product oracle. Do not assume passing tests prove ticket compliance.
+Linear acceptance criteria are an independent product oracle; passing tests do not prove ticket compliance.
 
-## Required preflight section
+## Required `Prerequisites`
 
-Every plan must include a concrete `Prerequisites` section containing:
+Every plan must name:
 
-- the exact command to resolve the worktree URL;
-- the health-check command, resolved Rails application URL, and exact condition under which `bin/wealthbox up` is required;
-- the dependency preflight;
-- exact feature-flag setup;
-- exact seed-data setup;
-- the seeded account/user to use;
-- login instructions through `local-account-login`;
-- any required role, allowlist, or rollout state.
+- the exact worktree-URL command;
+- the health check, resolved Rails URL, and condition requiring `bin/wealthbox up`;
+- dependency, feature-flag, and seed-data setup;
+- the seeded account/user and `local-account-login` flow;
+- required role, allowlist, or rollout state.
 
-For local dependencies, use:
+For local Ruby dependencies:
 
 ```bash
 bin/wealthbox exec bundle check
@@ -46,63 +43,45 @@ If gems are missing:
 bin/wealthbox exec bundle install
 ```
 
-Never include bare bundle, rails, rake, yarn, npm, npx, or docker compose.
+Never include bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compose`.
 
-Do not instruct QA to run `bin/wealthbox up` unconditionally. First inspect `bin/wealthbox status` and probe the resolved Rails health endpoint. Run `bin/wealthbox up` only when the health probe fails, status cannot provide a usable URL, or the QA request explicitly requires a restart or rebuild.
+Do not prescribe `bin/wealthbox up` unconditionally. Inspect `bin/wealthbox status` and probe the resolved Rails `/healthcheck`; run `bin/wealthbox up` only when the probe fails, the URL is unavailable, or the request explicitly requires a restart/rebuild.
 
-If a feature flag or seed command cannot be verified from the repository, say so explicitly and mark the prerequisite as blocked. Do not invent commands.
+If a flag or seed command cannot be verified in the repository, mark the prerequisite blocked; never invent commands.
 
-## Browser-step requirements
+## Browser steps
 
-Every browser step must identify:
+Each step must state the exact page or visible label, action, expected and prohibited visible results, and tool (`agent-browser` or headless Playwright).
 
-- the exact page or visible label;
-- the exact action;
-- the expected visible result;
-- the prohibited or unexpected result;
-- the tool to use: agent-browser or headless Playwright.
+Example:
 
-Avoid vague steps such as:
+- Open the resolved URL, sign in through the seeded-user flow, and confirm the account indicator shows Bill Jones; then open `Morning Brief QA Generative View`, click `Help me plan the compliance filing`, and confirm the friendly result contains no `<artifact_action>`, internal IDs, or provider parameters.
 
-- “Open the app.”
-- “Verify it works.”
-- “Click the button.”
-- “Check the result.”
+After a navigation timeout, inspect the URL and accessibility snapshot before retrying.
 
-Prefer:
+## Terminal proof
 
-- “Open the resolved worktree URL, sign in through the seeded-user login flow, and confirm the account indicator shows Bill Jones.”
-- “Open the seeded Morning Brief QA Generative View and click Help me plan the compliance filing.”
-- “Confirm the resulting user-facing message contains the friendly intent and does not contain <artifact_action>, internal IDs, or provider parameters.”
-
-If a browser action times out after navigation, instruct QA to inspect the URL and accessibility snapshot before retrying.
-
-## Terminal verification
-
-For backend or persistence changes, include a <details> block with concrete read-only commands using:
+For backend or persistence changes, include a `<details>` block with concrete read-only commands using:
 
 ```bash
 bin/wealthbox runner
 bin/wealthbox psql
 ```
 
-## Test structure
+## Plan shape
 
-Use this structure:
+Use this structure, omitting irrelevant surfaces:
 
 **Platforms**: Desktop web, Mobile web, Native/API as applicable
 
 ### Prerequisites
 
-- [ ] Exact environment and dependency setup
-- [ ] Exact feature-flag and seed-data setup
-- [ ] Exact login/account setup
+- [ ] Exact environment, dependency, flag, seed, and login setup
 
 ### Test 1: Primary user flow
 
 - [ ] Exact navigation and interaction
-- [ ] Exact visible assertion
-- [ ] Exact prohibited-content assertion
+- [ ] Visible expected result and prohibited-content assertion
 
 ### Test 2: Regression surface
 
@@ -115,24 +94,20 @@ Use this structure:
 
 ### Persisted/API Verification
 
-- [ ] Exact read-only command
-- [ ] Expected field values and invariants
+- [ ] Exact read-only command, expected fields, and invariants
 
-Only include scenarios relevant to the diff, but do not omit cross-surface coverage when shared serializers or message fields are changed.
+Include only scenarios relevant to the diff, but retain cross-surface coverage when shared serializers or message fields change.
 
-## Final checklist quality gate
+## Quality gate
 
-Before publishing the plan:
+Before publishing, verify that:
 
-- every checkbox is executable;
-- every feature flag and seed instruction is concrete;
-- no credentials are embedded in the plan;
-- browser proof and persisted-state proof are clearly separated;
+- every checkbox is executable and flags/seeds are concrete;
+- no credentials are embedded;
+- browser proof and persisted-state proof are separate;
 - tests/specs are not proposed as feature/system specs;
-- expected user-visible behavior is stated in plain language;
-- limitations are explicit;
-- screenshots are requested only where they materially help.
+- expected behavior is plain language, limitations are explicit, and screenshots are requested only when useful.
 
 ## Execution handoff
 
-This skill produces the QA plan; it does not execute environment setup or browser scenarios. For execution, supply the completed plan while loading and applying `jbootz-crm-web-qa` in `run` mode through the harness's normal skill mechanism. Treat the skill name as an instruction source, not a callable function. If the harness cannot load it, return the complete plan for a separate executor rather than implying a silent skill-to-skill call.
+This skill generates the plan; it does not execute setup or browser scenarios. For execution, load the plan and apply `jbootz-crm-web-qa` in `run` mode through the harness's normal skill mechanism. Treat skill names as instruction sources, not callable functions. If the mechanism is unavailable, return the complete plan for a separate executor rather than implying a silent handoff.
