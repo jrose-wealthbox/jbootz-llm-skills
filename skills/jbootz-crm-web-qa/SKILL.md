@@ -1,19 +1,29 @@
 ---
 name: jbootz-crm-web-qa
-description: Generate and execute deterministic Wealthbox crm-web QA using agent-browser, with explicit dependency, runtime, feature-flag, seed-data, login, and persisted-state verification. Use for local CRM-web QA, AI-agent QA, Generative Views, artifact actions, and PR validation. Use ONLY when working in `crm-web` repo.
+description: Route Wealthbox crm-web QA planning through jbootz-crm-web-qa-checklist and execute complete plans using agent-browser, with explicit dependency, runtime, feature-flag, seed-data, login, and persisted-state verification. Use for local CRM-web QA, AI-agent QA, Generative Views, artifact actions, and PR validation. Use ONLY when working in `crm-web` repo.
 user-invocable: true
 allowed-tools: Read, Bash, Glob, Grep, Task
 ---
 
 # Wealthbox QA
 
-Generate and execute concrete QA for the current CRM-web branch.
+Consume and execute a complete QA plan for the current CRM-web branch. `jbootz-crm-web-qa-checklist` is the source of truth for generating or repairing that plan.
 
 ## Mode routing
 
-- `plan` or no argument: generate a QA plan.
-- `run`: execute the plan.
+- `plan` or no argument: apply `jbootz-crm-web-qa-checklist` to generate the plan, then stop without executing it.
+- `run` with an existing complete plan: preserve the plan unchanged and execute it.
+- `run` with an incomplete plan: preserve its correct content, apply `jbootz-crm-web-qa-checklist` only to fill the gaps, then execute it.
+- `run` without a plan: apply `jbootz-crm-web-qa-checklist` first, then execute the resulting plan.
 - If the user explicitly requests headless Playwright, use the repository Playwright workflow for that request. Otherwise, use `agent-browser` for browser interaction.
+
+## Planning source and handoff
+
+The checklist skill owns plan decisions. This skill owns execution: dependencies, runtime, setup, login, browser mechanics, persisted-state inspection, evidence, worker coordination, and cleanup.
+
+When planning is required, load and apply the checklist through the current harness's normal skill mechanism; treat the skill name as an instruction source, not a callable function. If that mechanism is unavailable, read the sibling `../jbootz-crm-web-qa-checklist/SKILL.md` and apply it. If neither is possible, report that plan generation is blocked rather than recreating its rules here.
+
+Before execution, confirm the plan has concrete environment, dependency, feature-flag, seed-data, login, browser, and persisted-state instructions relevant to the change and does not conflict with the user request or acceptance criteria. A plan satisfying that check is complete and must not be regenerated.
 
 ## Core principles
 

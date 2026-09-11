@@ -7,7 +7,7 @@ allowed-tools: Read, Bash, Glob, Grep
 
 # Wealthbox QA Checklist
 
-Generate copy-paste-ready QA steps for the current CRM-web change. The QA steps should be suitable for execution by `agent-browser` or a human who is unfamiliar with CRM-web.
+This skill is the source of truth for generating copy-paste-ready QA plans for the current CRM-web change. Plans must be suitable for execution by `jbootz-crm-web-qa`, `agent-browser`, or a human unfamiliar with CRM-web.
 
 ## Inputs
 
@@ -26,7 +26,7 @@ Treat the Linear acceptance criteria as an independent product oracle. Do not as
 Every plan must include a concrete `Prerequisites` section containing:
 
 - the exact command to resolve the worktree URL;
-- the command to start/check the local environment;
+- the health-check command, resolved Rails application URL, and exact condition under which `bin/wealthbox up` is required;
 - the dependency preflight;
 - exact feature-flag setup;
 - exact seed-data setup;
@@ -47,6 +47,8 @@ bin/wealthbox exec bundle install
 ```
 
 Never include bare bundle, rails, rake, yarn, npm, npx, or docker compose.
+
+Do not instruct QA to run `bin/wealthbox up` unconditionally. First inspect `bin/wealthbox status` and probe the resolved Rails health endpoint. Run `bin/wealthbox up` only when the health probe fails, status cannot provide a usable URL, or the QA request explicitly requires a restart or rebuild.
 
 If a feature flag or seed command cannot be verified from the repository, say so explicitly and mark the prerequisite as blocked. Do not invent commands.
 
@@ -131,6 +133,6 @@ Before publishing the plan:
 - limitations are explicit;
 - screenshots are requested only where they materially help.
 
-```
+## Execution handoff
 
-```
+This skill produces the QA plan; it does not execute environment setup or browser scenarios. For execution, supply the completed plan while loading and applying `jbootz-crm-web-qa` in `run` mode through the harness's normal skill mechanism. Treat the skill name as an instruction source, not a callable function. If the harness cannot load it, return the complete plan for a separate executor rather than implying a silent skill-to-skill call.
