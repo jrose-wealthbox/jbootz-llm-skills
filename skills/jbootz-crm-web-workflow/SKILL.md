@@ -6,13 +6,15 @@ allowed-tools: Read, Bash, Glob, Grep
 
 # CRM-web workflow gates
 
-Use this skill for the first slice of CRM-web work:
+STOP if not currently in the `crm-web` repo.
 
-1. Establish whether the current checkout and local runtime are ready.
-2. Establish whether the requested work is still relevant and bounded.
+Use this skill for first slice of CRM-web work:
+
+1. Establish whether current checkout and local runtime are ready.
+2. Establish whether requested work is still relevant and bounded.
 3. Stop with one actionable blocker when either decision cannot be made.
 
-The workflow audit in docs/crm-web-session-workflow-audit.md is historical evidence. It can explain why these gates exist, but it is not current repository, ticket, PR, or service truth. Read the current repository instructions and inspect the current branch before relying on any example from that document.
+The workflow audit in docs/crm-web-session-workflow-audit.md is historical evidence. It can explain why these gates exist, but it is not current repository, ticket, PR, or service truth. Read current repository instructions and inspect current branch before relying on any example from that document.
 
 ## Boundaries
 
@@ -37,34 +39,34 @@ Run one bounded pass and report PREFLIGHT: READY or PREFLIGHT: BLOCKED. Do not r
 
 From the CRM-web root, record:
 
-~~~bash
+```bash
 pwd
 git status --short --branch
 git branch --show-current
 git rev-parse HEAD
 git worktree list --porcelain
-~~~
+```
 
-Locate and read the applicable AGENTS.md/CLAUDE.md, then inspect the current command and skill surfaces relevant to the request. At minimum, check bin/wealthbox, bin/_status, bin/_pkg_cache, and .agents/skills/; do not assume a command mentioned by the historical audit still exists.
+Locate and read the applicable AGENTS.md/CLAUDE.md, then inspect the current command and skill surfaces relevant to the request. At minimum, check bin/wealthbox, bin/\_status, bin/\_pkg_cache, and .agents/skills/; do not assume a command mentioned by the historical audit still exists.
 
 ### 2. Inspect services and the Rails URL
 
 Use the wrapper once:
 
-~~~bash
+```bash
 status_json="$(bin/wealthbox status)"
-~~~
+```
 
 Use jq to verify that the core services required by the requested work are running. For ordinary server-side work, that normally includes rails, db, redis, and opensearch. Resolve the Rails application and health URLs from .services.rails.url and .services.rails.localhost; never guess a port or domain.
 
-Probe the resolved Rails health endpoint with curl using the endpoint documented by the current repository workflow (currently /healthcheck in the existing CRM-web QA path). If status cannot run, a required service is down, or health fails, return one blocker with the observed detail and the next repository-supported command, usually:
+Probe resolved Rails health endpoint with curl using the endpoint documented by current repository workflow (currently /healthcheck in the existing CRM-web QA path). If status cannot run, a required service is down, or health fails, return one blocker with the observed detail and the next repository-supported command, usually:
 
-~~~text
+```text
 PREFLIGHT: BLOCKED
 check: service status | Rails health
 reason: <one concrete failure>
 next: bin/wealthbox up -d --wait
-~~~
+```
 
 Running bin/wealthbox up -d --wait is a setup action, not part of this read-only gate; only run it when the user has asked for setup or the owning QA/implementation workflow authorizes it. If Docker access is denied, treat that as an environment permission blocker and do not retry the same wrapped command.
 
@@ -72,10 +74,10 @@ Running bin/wealthbox up -d --wait is a setup action, not part of this read-only
 
 Run the repository-supported checks that the requested work needs:
 
-~~~bash
+```bash
 bin/wealthbox exec bundle check
 bin/wealthbox exec yarn install --immutable
-~~~
+```
 
 The Yarn command is an immutable lockfile/dependency verification used by the current repository cache workflow. It must not result in a lockfile change. If a check reports missing dependencies or needs network/install work, report that as the blocker and give the exact wrapper command required by the repository instructions; do not substitute a host package manager or blindly retry.
 
@@ -85,7 +87,7 @@ A successful result should include the mode, Rails URL, health result, required 
 
 Do not implement until a current checkpoint exists with exactly these decision fields (arrays may be empty where shown):
 
-~~~json
+```json
 {
   "ticket_status": "relevant",
   "base_sha": "<current base commit>",
@@ -96,7 +98,7 @@ Do not implement until a current checkpoint exists with exactly these decision f
   "scope_budget": 2,
   "out_of_scope": ["<explicit exclusion>"]
 }
-~~~
+```
 
 Validate the checkpoint against live sources and the current checkout:
 
