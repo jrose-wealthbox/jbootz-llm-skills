@@ -1,8 +1,11 @@
-.PHONY: install test
+.PHONY: install test validate
 
 install:
-	@./bin/install
+	@mise exec -- ./bin/install
 
 test:
-	@./test/install_test.sh
-	@sh ./test/mermaid_test.sh
+	@mise exec -- ./test/install_test.sh
+	@mise exec -- sh ./test/mermaid_test.sh
+
+validate:
+	@mise exec -- ./bin/validate-skills
