@@ -5,6 +5,12 @@ Canonical source for shared instructions.
 Keep it concise and project-independent. Agent-specific
 behavior goes in relevant skill or harness config.
 
+When the user explicitly requests one-shot execution or opts out of optional workflow skills, skip those steps and act within the stated scope; retain required safety and validation checks.
+
+## Required tools
+
+Check for tools required by the requested workflow before investing in it. If a required tool or access is unavailable, stop that workflow, tell the user what is missing and how it affects the result, and wait before using a materially slower or less effective workaround. Continue with a fallback when the user has authorized it.
+
 ## Jbootz.SCOUT delegation
 
 Use the `Jbootz.SCOUT` subagent for bounded mechanical work when the command is known or can be stated exactly and the result can be summarized as evidence. Examples: running specified tests, searching the repository, parsing verbose logs, and reporting aggregate counts with complete failure details.
