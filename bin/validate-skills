@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+
+require "pathname"
+require "psych"
+
+repo_root = Pathname.new(__dir__).parent
+skills_dir = repo_root.join("skills")
+errors = []
+validated = 0
+
+unless skills_dir.directory?
+  warn "error: skills directory does not exist: #{skills_dir}"
+  exit 1
+end
+
+Dir.children(skills_dir).sort.each do |entry|
+  skill_dir = skills_dir.join(entry)
+  unless skill_dir.directory?
+    errors << "#{skill_dir}: skill entry is not a directory"
+    next
+  end
+
+  unless entry.match?(/\A[a-z0-9-]+\z/)
+    errors << "#{skill_dir}: invalid skill directory name"
+    next
+  end
+
+  skill_file = skill_dir.join("SKILL.md")
+  unless skill_file.file? && !skill_file.symlink?
+    errors << "#{skill_file}: expected a regular SKILL.md file"
+    next
+  end
+
+  lines = skill_file.read.lines
+  unless lines.first&.chomp == "---"
+    errors << "#{skill_file}: YAML frontmatter must start on the first line"
+    next
+  end
+
+  closing_index = (1...lines.length).find { |index| lines[index].chomp == "---" }
+  unless closing_index
+    errors << "#{skill_file}: YAML frontmatter has no closing delimiter"
+    next
+  end
+
+  begin
+    metadata = Psych.safe_load(
+      lines[1...closing_index].join,
+      permitted_classes: [],
+      permitted_symbols: [],
+      aliases: false,
+      filename: skill_file.to_s
+    )
+  rescue Psych::Exception, SystemCallError => e
+    errors << "#{skill_file}: could not parse YAML frontmatter: #{e.message}"
+    next
+  end
+
+  unless metadata.is_a?(Hash)
+    errors << "#{skill_file}: YAML frontmatter must contain a mapping"
+    next
+  end
+
+  unless metadata["name"] == entry
+    errors << "#{skill_file}: name must match skill directory '#{entry}'"
+    next
+  end
+
+  unless metadata["description"].is_a?(String) && !metadata["description"].empty?
+    errors << "#{skill_file}: description must be a non-empty string"
+    next
+  end
+
+  validated += 1
+end
+
+if errors.empty?
+  puts "Validated frontmatter for #{validated} skills."
+else
+  errors.each { |error| warn "error: #{error}" }
+  exit 1
+end
