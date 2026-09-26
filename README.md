@@ -61,6 +61,30 @@ Edit `global/global.md` or an agent's canonical source and run the installer
 again to render the changes. Adding or renaming an agent also requires
 reinstalling.
 
+## Permission rules
+
+User-level permission rules are maintained in `permissions/` and installed by
+`bin/install`:
+
+- Codex `.rules` files are symlinked into `${CODEX_HOME:-$HOME/.codex}/rules`.
+  These remain user-level rules and apply across projects. The installer
+  requires `codex execpolicy check` on `PATH` and uses it to parse each source
+  before changing either host's configuration.
+- Claude's `allow`, `ask`, and `deny` arrays come from
+  `permissions/claude-code/rules.json` and synchronized into
+  `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json`. Other settings, including
+  `permissions.defaultMode`, are preserved. Install state is recorded under
+  `.jbootz-llm-skills/` in the Claude config directory so later installs can
+  detect edits made outside this repository.
+
+On a first install, an empty Claude permission list or one that already matches
+the repo source is safe to adopt. Matching Codex rule files are migrated to
+repo-backed symlinks; missing files are linked. If either host has different
+existing rules, or Claude's rules change after installation, the installer
+stops and identifies the config that needs reconciling. Add intentional rules
+to the source in this repo and run the installer again; it does not overwrite
+unrecognized rules.
+
 ## Skills
 
 Every direct child of `skills/` is one skill and must:
@@ -70,6 +94,9 @@ Every direct child of `skills/` is one skill and must:
 - Keep optional scripts, references, and assets inside its own directory.
 
 Included skills:
+
+- `jbootz-code-explainer`: explains repository structure, entities, execution
+  flows, and relevant Git history and pull requests.
 
 - `jbootz-helloworld`: installation smoke test. In a new Claude Code or Codex
   session, ask:

@@ -29,7 +29,12 @@ manifest_path = agent_dir.join("agent.yml")
 abort_with("agent manifest is missing: #{manifest_path}") unless manifest_path.file?
 
 begin
-  manifest = Psych.safe_load_file(manifest_path, permitted_classes: [], permitted_symbols: [], aliases: false)
+  manifest = Psych.safe_load_file(
+    manifest_path,
+    permitted_classes: [],
+    permitted_symbols: [],
+    aliases: false
+  )
 rescue Psych::Exception, SystemCallError => e
   abort_with("could not read #{manifest_path}: #{e.message}")
 end

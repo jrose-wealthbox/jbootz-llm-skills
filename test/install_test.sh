@@ -6,6 +6,34 @@ script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
 repo_root=$(CDPATH='' cd -- "$script_dir/.." && pwd -P)
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/jbootz-skills-test.XXXXXX")
 trap 'rm -rf "$test_root"' EXIT HUP INT TERM
+mock_bin="$test_root/mock-bin"
+mkdir -p "$mock_bin"
+cat > "$mock_bin/codex" <<'EOF'
+#!/bin/sh
+
+[ "$1" = execpolicy ] && [ "$2" = check ] || exit 2
+shift 2
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --help|-h)
+      exit 0
+      ;;
+    --rules|-r)
+      [ "$#" -ge 2 ] && [ -f "$2" ] || exit 1
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+exit 0
+EOF
+chmod +x "$mock_bin/codex"
+PATH="$mock_bin:$PATH"
+export PATH
 
 fail() {
   printf 'FAIL: %s\n' "$*" >&2
@@ -15,7 +43,7 @@ fail() {
 copy_fixture() {
   fixture=$1
   mkdir -p "$fixture"
-  cp -R "$repo_root/agents" "$repo_root/bin" "$repo_root/global" "$repo_root/install" "$repo_root/skills" "$fixture/"
+  cp -R "$repo_root/agents" "$repo_root/bin" "$repo_root/global" "$repo_root/install" "$repo_root/permissions" "$repo_root/skills" "$fixture/"
   fixture=$(CDPATH='' cd -- "$fixture" && pwd -P)
 }
 

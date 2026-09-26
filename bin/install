@@ -9,6 +9,10 @@ agents_dir="$repo_root/agents"
 agent_renderer="$repo_root/bin/render-agent"
 global_file="$repo_root/global/global.md"
 adapters_dir="$repo_root/install/adapters"
+permissions_dir="$repo_root/permissions"
+codex_rules_source_dir="$permissions_dir/codex"
+claude_rules_source="$permissions_dir/claude-code/rules.json"
+claude_permissions_installer="$repo_root/bin/install-claude-permissions"
 begin_marker='<!-- BEGIN jbootz-llm-skills global instructions -->'
 end_marker='<!-- END jbootz-llm-skills global instructions -->'
 errors=0
@@ -64,6 +68,176 @@ validate_adapter() {
       ;;
     *)
       error "adapter destination is not absolute: $adapter returned $target"
+      ;;
+  esac
+}
+
+validate_permission_sources() {
+  if [ ! -d "$codex_rules_source_dir" ]; then
+    error "Codex permission rule source directory is missing: $codex_rules_source_dir"
+  else
+    codex_rule_count=0
+    for codex_rule_source in "$codex_rules_source_dir"/*.rules; do
+      if [ ! -e "$codex_rule_source" ] && [ ! -L "$codex_rule_source" ]; then
+        continue
+      fi
+
+      codex_rule_count=$((codex_rule_count + 1))
+      if [ ! -f "$codex_rule_source" ] || [ -L "$codex_rule_source" ]; then
+        error "Codex permission rule source must be a regular file: $codex_rule_source"
+      fi
+    done
+
+    if [ "$codex_rule_count" -eq 0 ]; then
+      error "no Codex permission rule sources found in $codex_rules_source_dir"
+    fi
+  fi
+
+  if ! command -v codex >/dev/null 2>&1; then
+    error "Codex CLI is required to validate permission rule sources; install it or add it to PATH"
+  elif ! codex execpolicy check --help >/dev/null 2>&1; then
+    error "installed Codex CLI does not provide 'execpolicy check'"
+  else
+    for codex_rule_source in "$codex_rules_source_dir"/*.rules; do
+      if [ ! -f "$codex_rule_source" ]; then
+        continue
+      fi
+
+      if ! codex execpolicy check --rules "$codex_rule_source" codex mcp list >/dev/null 2>&1; then
+        error "Codex CLI rejected permission rule source: $codex_rule_source"
+      fi
+    done
+  fi
+
+  if [ ! -f "$claude_rules_source" ] || [ -L "$claude_rules_source" ]; then
+    error "Claude permission rule source must be a regular file: $claude_rules_source"
+  fi
+
+  if [ ! -x "$claude_permissions_installer" ]; then
+    error "Claude permission installer is missing or not executable: $claude_permissions_installer"
+  fi
+}
+
+preflight_codex_rule_target() {
+  codex_config_dir=$1
+  codex_rules_target_dir="$codex_config_dir/rules"
+
+  if { [ -e "$codex_rules_target_dir" ] || [ -L "$codex_rules_target_dir" ]; } && [ ! -d "$codex_rules_target_dir" ]; then
+    error "Codex permission rule destination is not a directory: $codex_rules_target_dir"
+    return
+  fi
+
+  for codex_rule_source in "$codex_rules_source_dir"/*.rules; do
+    if [ ! -f "$codex_rule_source" ]; then
+      continue
+    fi
+
+    codex_rule_destination="$codex_rules_target_dir/${codex_rule_source##*/}"
+    if [ -L "$codex_rule_destination" ]; then
+      linked_source=$(readlink "$codex_rule_destination")
+      if [ "$linked_source" != "$codex_rule_source" ]; then
+        error "Codex permission rule conflict at $codex_rule_destination (links to $linked_source)"
+      fi
+    elif [ -e "$codex_rule_destination" ]; then
+      if [ ! -f "$codex_rule_destination" ] || ! cmp -s "$codex_rule_source" "$codex_rule_destination"; then
+        error "Codex permission rule conflict at $codex_rule_destination (existing rules differ from repo source)"
+      fi
+    fi
+  done
+}
+
+preflight_permission_targets() {
+  for permission_adapter in "$adapters_dir"/*; do
+    if [ ! -f "$permission_adapter" ] || [ ! -x "$permission_adapter" ]; then
+      continue
+    fi
+
+    permission_agent=${permission_adapter##*/}
+    permission_skills_target=$("$permission_adapter")
+    permission_adapter_status=$?
+    if [ "$permission_adapter_status" -ne 0 ] || [ -z "$permission_skills_target" ]; then
+      error "could not resolve permission target for $permission_agent"
+      continue
+    fi
+    permission_config_dir=$(dirname "$permission_skills_target")
+
+    case "$permission_agent" in
+      codex)
+        preflight_codex_rule_target "$permission_config_dir"
+        ;;
+      claude-code)
+        permission_state="$permission_config_dir/.jbootz-llm-skills/claude-permission-state.json"
+        if ! "$claude_permissions_installer" check "$claude_rules_source" "$permission_config_dir/settings.json" "$permission_state"; then
+          errors=$((errors + 1))
+        fi
+        ;;
+      *)
+        error "no permission installer is configured for $permission_agent"
+        ;;
+    esac
+  done
+}
+
+install_codex_permission_rules() {
+  codex_config_dir=$1
+  codex_rules_target_dir="$codex_config_dir/rules"
+
+  if ! mkdir -p "$codex_rules_target_dir"; then
+    error "could not create Codex permission rule directory: $codex_rules_target_dir"
+    return 1
+  fi
+
+  for codex_rule_source in "$codex_rules_source_dir"/*.rules; do
+    if [ ! -f "$codex_rule_source" ]; then
+      continue
+    fi
+
+    codex_rule_destination="$codex_rules_target_dir/${codex_rule_source##*/}"
+    if [ -L "$codex_rule_destination" ]; then
+      linked_source=$(readlink "$codex_rule_destination")
+      if [ "$linked_source" = "$codex_rule_source" ]; then
+        printf 'codex: unchanged permission rules %s\n' "$codex_rule_destination"
+      else
+        error "Codex permission rule conflict at $codex_rule_destination (links to $linked_source)"
+      fi
+    elif [ -e "$codex_rule_destination" ]; then
+      if [ -f "$codex_rule_destination" ] && cmp -s "$codex_rule_source" "$codex_rule_destination"; then
+        codex_rule_temp_link="$codex_rule_destination.jbootz-llm-skills.$$"
+        if [ -e "$codex_rule_temp_link" ] || [ -L "$codex_rule_temp_link" ]; then
+          error "temporary Codex permission link already exists: $codex_rule_temp_link"
+        elif ln -s "$codex_rule_source" "$codex_rule_temp_link" && mv "$codex_rule_temp_link" "$codex_rule_destination"; then
+          printf 'codex: migrated permission rules %s -> %s\n' "$codex_rule_destination" "$codex_rule_source"
+        else
+          rm -f "$codex_rule_temp_link"
+          error "could not migrate Codex permission rule: $codex_rule_destination"
+        fi
+      else
+        error "Codex permission rule conflict at $codex_rule_destination (existing rules differ from repo source)"
+      fi
+    elif ln -s "$codex_rule_source" "$codex_rule_destination"; then
+      printf 'codex: linked permission rules %s -> %s\n' "$codex_rule_destination" "$codex_rule_source"
+    else
+      error "could not link Codex permission rules at $codex_rule_destination"
+    fi
+  done
+}
+
+install_agent_permissions() {
+  permission_agent=$1
+  permission_skills_target=$2
+  permission_config_dir=$(dirname "$permission_skills_target")
+
+  case "$permission_agent" in
+    codex)
+      install_codex_permission_rules "$permission_config_dir"
+      ;;
+    claude-code)
+      permission_state="$permission_config_dir/.jbootz-llm-skills/claude-permission-state.json"
+      "$claude_permissions_installer" install "$claude_rules_source" "$permission_config_dir/settings.json" "$permission_state"
+      ;;
+    *)
+      error "no permission installer is configured for $permission_agent"
+      return 1
       ;;
   esac
 }
@@ -412,6 +586,11 @@ if [ "$adapter_count" -eq 0 ]; then
   error "no installation adapters found in $adapters_dir"
 fi
 
+validate_permission_sources
+if [ "$errors" -eq 0 ]; then
+  preflight_permission_targets
+fi
+
 if [ "$errors" -ne 0 ]; then
   printf 'Installation aborted with %s validation error(s).\n' "$errors" >&2
   exit 1
@@ -428,6 +607,20 @@ if ! {
   printf '\n%s\n' "$end_marker"
 } > "$block_file"; then
   error "could not build global instruction block"
+  exit 1
+fi
+
+for adapter in "$adapters_dir"/*; do
+  agent=${adapter##*/}
+  target=$("$adapter")
+
+  if ! install_agent_permissions "$agent" "$target"; then
+    error "permission installation failed for $agent"
+  fi
+done
+
+if [ "$errors" -ne 0 ]; then
+  printf 'Permission installation stopped with %s error(s); skills and shared instructions were not installed.\n' "$errors" >&2
   exit 1
 fi
 
@@ -463,4 +656,4 @@ if [ "$errors" -ne 0 ]; then
   exit 1
 fi
 
-printf 'All personal skills are installed. Start a new agent session to use them.\n'
+printf 'Personal skills and permission rules are installed. Start a new agent session to use them.\n'

@@ -1,0 +1,8 @@
+{
+  "allow": [
+    "Bash(python3 *)",
+    "mcp__Claude_Browser__*"
+  ],
+  "ask": [],
+  "deny": []
+}

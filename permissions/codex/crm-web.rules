@@ -1,0 +1,89 @@
+prefix_rule(
+    pattern = ["gh", "pr", "view"],
+    decision = "allow",
+    justification = "Read-only PR inspection",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "diff"],
+    decision = "allow",
+    justification = "Read-only PR inspection",
+)
+
+prefix_rule(
+    pattern = ["gh", "pr", "checks"],
+    decision = "allow",
+    justification = "Read-only CI inspection",
+)
+
+prefix_rule(
+    pattern = ["git", "ls-remote", "origin"],
+    decision = "allow",
+    justification = "Read-only remote verification",
+)
+
+prefix_rule(
+    pattern = ["git", "commit", ["-m", "--message"]],
+    decision = "allow",
+    justification = "Create a local commit after review",
+)
+
+prefix_rule(
+    pattern = ["bin/wealthbox", "status"],
+    decision = "allow",
+    justification = "Read-only local Wealthbox status inspection",
+)
+
+prefix_rule(
+    pattern = ["bin/wealthbox", "up"],
+    decision = "allow",
+    justification = "Start the local Wealthbox development environment",
+)
+
+prefix_rule(
+    pattern = ["bin/wealthbox", "rspec"],
+    decision = "allow",
+    justification = "Run repository RSpec tests in the dedicated test service",
+)
+
+prefix_rule(
+    pattern = ["gh", "run", "view"],
+    decision = "allow",
+    justification = "Read-only GitHub CI log inspection",
+)
+
+prefix_rule(
+    pattern = ["git", "add", [".", "-A", "--all", "-u"]],
+    decision = "forbidden",
+    justification = "Stage explicit paths instead of the whole worktree",
+)
+
+prefix_rule(
+    pattern = ["git", "clean", "-f"],
+    decision = "forbidden",
+    justification = "Destructive untracked-file deletion",
+)
+
+prefix_rule(
+    pattern = ["bin/wealthbox", "exec"],
+    decision = "allow",
+    justification = "Run local development checks inside the Wealthbox container",
+)
+
+prefix_rule(
+    pattern = ["git", "merge", "origin/master"],
+    decision = "allow",
+    justification = "Merge origin/master into the current CRM-web worktree",
+)
+
+prefix_rule(
+    pattern = ["git", "rebase", "--abort"],
+    decision = "allow",
+    justification = "Abort an in-progress rebase in the current CRM-web worktree",
+)
+
+prefix_rule(
+    pattern = ["git", "push", "*"],
+    decision = "allow",
+    justification = "We are software engineers. We push code, bro",
+)

@@ -1,21 +1,21 @@
 ---
 name: jbootz-pr-explainer
-description: Use when a pull request needs a terse teammate-facing explainer based on GitHub and Linear evidence.
+description: Use when drafting terse teammate-facing PR explainers from GitHub and Linear evidence.
 ---
 
 # PR Explainer
 
-Write a terse, plain Markdown explainer for Rails and TypeScript developers. Explain intent and flow, not every diff edit.
+Write a terse, plain Markdown explainer for Rails and TypeScript developers, focused on intent and flow.
 
 ## Preconditions
 
-Stop with a concise explanation if no PR was supplied, `gh` is unavailable or unauthenticated, the PR is inaccessible, or its Linear issue number and title cannot be established. Never guess identifiers.
+Stop if no PR is supplied, it is inaccessible, `gh` is unavailable or unauthenticated, or its Linear issue number/title cannot be established. Never guess identifiers.
 
 ## Evidence
 
-Pin the PR URL, number, and exact HEAD commit. Inspect its description, diff, changed files, commits, reviews, and relevant discussion; read the Linear issue and linked issues with available tools; use relevant conversation context.
+Pin the PR URL, number, and full HEAD SHA. Inspect its description, diff, changed files, commits, reviews, and relevant discussion; read the Linear issue and linked issues; use relevant conversation context.
 
-Recheck HEAD before publishing and refresh the explainer if it changed. State only supported conclusions; do not infer rejected approaches or deferral reasons from missing code.
+Recheck HEAD before publishing; refresh the explainer if it changed. State only supported conclusions; do not infer rejected approaches or deferral reasons from missing code.
 
 ## Document
 
@@ -73,26 +73,15 @@ Omit empty optional sections. Account for every changed file; put files outside 
 - [<ID>: <title>](URL) — <One-sentence summary.> <Confirmed reason for deferral, if known.>
 ```
 
-Use `Points of Interest` only for genuinely surprising complexity: substantial iteration, external-invariant workarounds, intentional best-practice exceptions, reviewer disagreement or feedback-driven changes, or edits outside the expected feature area.
+Use `Points of Interest` only for surprising complexity: substantial iteration,
+external-invariant workarounds, intentional best-practice exceptions, review
+disagreement, feedback-driven changes, or edits outside the expected feature area.
 
-Use a Mermaid diagram only when it materially clarifies branch-specific
-information. Good fits include an ERD of relevant entities and their
-relationships before or after the branch's changes, or a nontrivial execution
-flow with meaningful branching. For linear or nearly linear flows, prefer
-bullets; flowcharts are more useful when they show real branching. Skip diagrams
-that repeat the prose.
-
-Keep each rendered ASCII diagram within 150 characters (columns) wide and 800
-lines (rows) tall. If a diagram would exceed either limit, consider splitting
-it into readable diagrams; use bullets when splitting would add little clarity.
-
-When useful, load [jbootz-mermaid-diagrams](../jbootz-mermaid-diagrams/SKILL.md)
-and follow its workflow: create Mermaid source in a unique temporary directory,
-resolve the absolute path to that skill's `scripts/render.sh`, and run
-`<renderer-path> ascii <file.mmd>`. Put only readable, faithfully rendered
-ASCII output in a fenced `text` block; do not hand-draw the diagram or include
-the `.mmd` source unless requested. If ASCII mode cannot represent the diagram
-clearly within the size limits, omit it and retain the prose.
+For diagrams, load
+[jbootz-mermaid-diagrams](../jbootz-mermaid-diagrams/SKILL.md) and follow its
+selection, ASCII-rendering, and size guidance. Include only faithful, readable
+ASCII in a fenced `text` block; omit the `.mmd` source unless requested. If
+ASCII is unclear, use prose.
 
 ## Publish
 

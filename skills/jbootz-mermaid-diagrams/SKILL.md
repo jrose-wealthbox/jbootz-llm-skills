@@ -60,6 +60,12 @@ supported syntax when equivalent.
 For architecture diagrams, show clear boundaries, label non-obvious edges,
 keep diagrams readable, and split large diagrams when needed.
 
+For explanations, use ERDs for entity relationships and flowcharts for
+meaningfully branched execution. Prefer bullets for linear or near-linear flows
+and avoid diagrams that repeat the prose. Keep each ASCII render within 150
+characters wide and 800 lines tall. Split oversized diagrams only when each
+remains clear; otherwise use bullets.
+
 ## Validation
 
 After creating/modifying source, render SVG to verify syntax:

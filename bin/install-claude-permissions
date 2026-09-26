@@ -1,0 +1,144 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "json"
+require "tempfile"
+
+RULE_NAMES = %w[allow ask deny].freeze
+STATE_VERSION = 1
+
+def abort_with(message)
+  warn "error: #{message}"
+  exit 1
+end
+
+def read_json(path, description)
+  abort_with("#{description} is a symlink: #{path}") if File.symlink?(path)
+  return {} unless File.exist?(path)
+
+  abort_with("#{description} is not a regular file: #{path}") unless File.file?(path)
+
+  JSON.parse(File.read(path))
+rescue JSON::ParserError, SystemCallError => error
+  abort_with("could not read #{description} #{path}: #{error.message}")
+end
+
+def validate_rule_arrays(value, description)
+  abort_with("#{description} must be a JSON object") unless value.is_a?(Hash)
+
+  RULE_NAMES.to_h do |name|
+    rules = value.fetch(name, [])
+    unless rules.is_a?(Array) && rules.all? { |rule| rule.is_a?(String) } && rules.uniq == rules
+      abort_with("#{description}.#{name} must be an array of unique strings")
+    end
+    [name, rules]
+  end
+end
+
+def read_rules_source(path)
+  source = read_json(path, "Claude permission rules source")
+  unknown_names = source.keys - RULE_NAMES
+  abort_with("unknown rule arrays in #{path}: #{unknown_names.join(', ')}") unless unknown_names.empty?
+  missing_names = RULE_NAMES - source.keys
+  abort_with("missing rule arrays in #{path}: #{missing_names.join(', ')}") unless missing_names.empty?
+  validate_rule_arrays(source, "Claude permission rules source")
+end
+
+def read_settings(path)
+  settings = read_json(path, "Claude settings")
+  abort_with("Claude settings must be a JSON object: #{path}") unless settings.is_a?(Hash)
+
+  permissions = settings.fetch("permissions", {})
+  abort_with("Claude settings permissions must be a JSON object: #{path}") unless permissions.is_a?(Hash)
+
+  [settings, permissions, validate_rule_arrays(permissions, "Claude settings permissions")]
+end
+
+def read_state(path)
+  abort_with("Claude permission state is a symlink: #{path}") if File.symlink?(path)
+  return nil unless File.exist?(path)
+
+  state = read_json(path, "Claude permission state")
+  unless state.is_a?(Hash) && state["version"] == STATE_VERSION
+    abort_with("Claude permission state has an unsupported format: #{path}")
+  end
+  state_rules = validate_rule_arrays(state["rules"], "Claude permission state rules")
+  { "version" => STATE_VERSION, "rules" => state_rules }
+end
+
+def validate_target(current_rules, desired_rules, state, settings_path)
+  if state
+    unless current_rules == state.fetch("rules")
+      abort_with(
+        "Claude permission settings changed outside jbootz-llm-skills; " \
+        "reconcile #{settings_path} with permissions/claude-code/rules.json before reinstalling"
+      )
+    end
+  elsif current_rules.values.any? { |rules| !rules.empty? } && current_rules != desired_rules
+    abort_with(
+      "existing Claude allow/ask/deny rules differ from this repo; " \
+      "merge them into permissions/claude-code/rules.json before reinstalling"
+    )
+  end
+end
+
+def atomic_write(path, content, mode)
+  directory = File.dirname(path)
+  FileUtils.mkdir_p(directory, mode: 0o700)
+  temporary_path = nil
+
+  Tempfile.create([".#{File.basename(path)}.", ".tmp"], directory) do |temporary|
+    temporary_path = temporary.path
+    temporary.chmod(mode)
+    temporary.write(content)
+    temporary.flush
+    temporary.fsync
+    File.rename(temporary.path, path)
+  end
+ensure
+  File.unlink(temporary_path) if temporary_path && File.exist?(temporary_path)
+end
+
+def write_if_changed(path, content, mode)
+  return false if File.file?(path) && File.read(path) == content
+
+  atomic_write(path, content, mode)
+  true
+end
+
+mode, source_path, settings_path, state_path = ARGV
+unless %w[check install].include?(mode) && source_path && settings_path && state_path
+  abort_with("usage: #{File.basename($PROGRAM_NAME)} check|install RULES_JSON SETTINGS_JSON STATE_JSON")
+end
+
+state_directory = File.dirname(state_path)
+abort_with("Claude permission state directory is a symlink: #{state_directory}") if File.symlink?(state_directory)
+if File.exist?(state_directory) && !File.directory?(state_directory)
+  abort_with("Claude permission state directory is not a directory: #{state_directory}")
+end
+
+desired_rules = read_rules_source(source_path)
+settings, permissions, current_rules = read_settings(settings_path)
+state = read_state(state_path)
+validate_target(current_rules, desired_rules, state, settings_path)
+
+if mode == "check"
+  puts "claude-code: permission settings ready #{settings_path}"
+  exit 0
+end
+
+RULE_NAMES.each { |name| permissions[name] = desired_rules.fetch(name) }
+settings["permissions"] = permissions
+settings_content = "#{JSON.pretty_generate(settings)}\n"
+settings_mode = File.file?(settings_path) ? (File.stat(settings_path).mode & 0o777) : 0o600
+settings_changed = write_if_changed(settings_path, settings_content, settings_mode)
+
+state_content = "#{JSON.pretty_generate("version" => STATE_VERSION, "rules" => desired_rules)}\n"
+state_changed = write_if_changed(state_path, state_content, 0o600)
+
+if settings_changed || state_changed
+  puts "claude-code: installed managed allow/ask/deny rules #{settings_path}"
+else
+  puts "claude-code: unchanged managed allow/ask/deny rules #{settings_path}"
+end
