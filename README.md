@@ -24,14 +24,18 @@ Custom agents are installed alongside those skills:
 
 ## Install
 
+This repository pins Ruby 4.0.1 in `mise.toml`. On each computer, run
+`mise trust` once for this repository and `mise install` after cloning or
+changing the configured version. Make targets run inside that mise environment.
+
 ```sh
 make install
 ```
 
-You can also run `./bin/install` directly. The command is idempotent: existing
-correct links, managed instruction blocks, and rendered agent definitions are
-left unchanged. Unmanaged files, directories, or links at conflicting
-destinations are reported and never overwritten.
+You can also run `mise exec -- ./bin/install` directly. The command is
+idempotent: existing correct links, managed instruction blocks, and rendered
+agent definitions are left unchanged. Unmanaged files, directories, or links
+at conflicting destinations are reported and never overwritten.
 
 The installer wraps the contents of `global/global.md` in a marked block. If a
 target instruction file does not exist, it creates the file. If the file exists
@@ -124,3 +128,13 @@ make test
 
 Tests use temporary configuration directories and do not touch real agent
 installations.
+
+## Validate skill metadata
+
+```sh
+make validate
+```
+
+This parses each skill's YAML frontmatter with Ruby's standard-library Psych.
+It uses the Ruby runtime pinned in `mise.toml`; no Python or PyYAML
+dependency is needed.
