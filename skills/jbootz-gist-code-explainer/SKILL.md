@@ -1,11 +1,11 @@
 ---
-name: jbootz-code-explainer
-description: Use when explaining a repository, mapping entities, tracing execution flows, or reviewing relevant code history and pull requests.
+name: jbootz-gist-code-explainer
+description: Use when generating an artifact to explain a repository, map entities, trace execution flows, or review relevant code history and pull requests.
 ---
 
-# Code Explainer
+# Gist Code Explainer
 
-Explain code from repository evidence. Keep to the requested scope; a whole-repository request gets an architecture map, not a file-by-file dump. Explore read-only unless the user separately asks for edits.
+Explain code from repository evidence. Keep to the requested scope; a whole-repository request gets an architecture map, not a file-by-file dump. Explore read-only.
 
 ## Scope and Current Behavior
 
@@ -26,3 +26,15 @@ Explain code from repository evidence. Keep to the requested scope; a whole-repo
 Include only useful sections: architecture map, entity relationships, execution flows, and recent changes with related PRs. Cite current behavior to files and lines; cite history with commit dates and SHAs or PR links.
 
 For diagrams, follow [jbootz-mermaid-diagrams](../jbootz-mermaid-diagrams/SKILL.md) for selection, rendering, and size limits.
+
+## Publish
+
+Use this Gist description and filename:
+
+```text
+{summary of what user asked to explain} Explainer VNNN
+```
+
+Replace filename-unsafe characters with `-`. Search all Gists owned by the authenticated user, not only the first page. Use `V001` unless a matching explainer exists; otherwise increment the highest version. Revisions create a new versioned Gist rather than editing an old one.
+
+Secret Gists are unlisted, not private; include no secrets or copied proprietary code. Create with `gh gist create --filename <filename> --desc <description> -` (secret is the default). Return only its URL.

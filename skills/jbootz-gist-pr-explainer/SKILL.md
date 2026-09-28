@@ -1,5 +1,5 @@
 ---
-name: jbootz-pr-explainer
+name: jbootz-gist-pr-explainer
 description: Use when drafting terse teammate-facing PR explainers from GitHub and Linear evidence.
 ---
 
@@ -30,11 +30,11 @@ Omit empty optional sections. Account for every changed file; put files outside 
 
 ## Extra small TL;DR
 
-<One sentence: problem and solution.>
+<One sentence: problem and solution. Plain English, no jargon>
 
 ## Problem
 
-<One sentence combining the Linear issue with confirmed implementation context.>
+<One sentence combining the Linear issue with confirmed implementation context. Plain English.>
 
 ## User Impact
 
@@ -42,7 +42,7 @@ Omit empty optional sections. Account for every changed file; put files outside 
 
 ## Rejected Solutions
 
-- <One terse sentence naming the approach. One terse sentence explaining its rejection.>
+- <Per rejected solution: One terse sentence naming the approach. One terse sentence explaining its rejection.>
 
 ## Points of Interest
 
