@@ -29,3 +29,50 @@ Core workflow:
 2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
 3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
 4. Re-snapshot after page changes
+
+## Skills
+
+Use these skills only when the user or another skill explicitly requests this skill.
+
+"- foo*" means it applies to all skills beginning with "foo"
+
+- anthropic*
+- chrome-devtools*
+- chrome*
+- find-skills
+- frontend-design:frontend-design
+- hookify*
+- jbootz*
+- superpowers:using-superpowers
+- superset*
+- wealthbox:adr
+- wealthbox:cleanup-code
+- wealthbox:diagnose-and-fix-error
+- wealthbox:docs
+- wealthbox:dogfood
+- wealthbox:fix-honeybadger
+- wealthbox:generate-meme
+- wealthbox:generate-production-investigation
+- wealthbox:hb-monitor
+- wealthbox:headless-component-designer
+- wealthbox:issue-to-draft-pr
+- wealthbox:learnings
+- wealthbox:lgtm
+- wealthbox:linear-project-automation
+- wealthbox:open-pr
+- wealthbox:open-spike-pr
+- wealthbox:pr-quiz
+- wealthbox:pr-stack-nav
+- wealthbox:pr-stack-nav
+- wealthbox:qa-checklist
+- wealthbox:query-database
+- wealthbox:request-log-search
+- wealthbox:request-log-search
+- wealthbox:request-skill
+- wealthbox:request-skill
+- wealthbox:screenshot
+- wealthbox:search-wealthbox-docs
+- wealthbox:split-pr
+- wealthbox:take-webpage-screenshot
+- wealthbox:video-assembly
+- wealthbox:video-walkthrough
