@@ -60,4 +60,25 @@ fi
 rg -F --quiet -- 'terminal renderer does not support' "$test_root/state.err" \
   || fail "both mode did not report terminal renderer incompatibility"
 
+tool_free_bin="$test_root/tool-free-bin"
+mkdir -p "$tool_free_bin"
+for tool in bash env dirname mkdir mktemp; do
+  ln -s "$(command -v "$tool")" "$tool_free_bin/$tool"
+done
+
+for mode in text both; do
+  if PATH="$tool_free_bin" "$renderer" "$mode" "$test_root/diagram.mmd" \
+    > "$test_root/missing-$mode.out" 2> "$test_root/missing-$mode.err"; then
+    fail "$mode mode succeeded without mermaid-ascii"
+  else
+    status=$?
+  fi
+  [ "$status" -eq 127 ] || fail "$mode mode exited $status without mermaid-ascii, expected 127"
+  rg -F --quiet -- 'required command not found: mermaid-ascii' "$test_root/missing-$mode.err" \
+    || fail "$mode mode did not name the missing tool"
+  [ ! -s "$test_root/missing-$mode.out" ] || fail "$mode mode produced output despite a missing tool"
+done
+rg -F --quiet -- 'mermaid-ascii mmdc' "$test_root/missing-both.err" \
+  || fail "both mode did not name every missing tool"
+
 printf '%s\n' 'PASS: Mermaid renderer behavior'

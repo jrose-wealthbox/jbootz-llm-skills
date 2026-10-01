@@ -199,6 +199,23 @@ fi
 
 cmp -s "$claude_root/CLAUDE.md" "$test_root/malformed-claude-before" || fail "malformed Claude file was modified"
 
+fixture="$test_root/stale-repo"
+copy_fixture "$fixture"
+claude_root="$test_root/stale-claude"
+codex_root="$test_root/stale-codex"
+mkdir -p "$claude_root/skills"
+ln -s "$fixture/skills/renamed-skill" "$claude_root/skills/renamed-skill"
+ln -s "$test_root/unmanaged/missing" "$claude_root/skills/unmanaged-dangling"
+
+stale_output=$(CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install")
+case "$stale_output" in
+  *'removed stale link'*'renamed-skill'*) ;;
+  *) fail "install did not report removing the stale skill link" ;;
+esac
+[ ! -L "$claude_root/skills/renamed-skill" ] || fail "stale skill link was not removed"
+assert_link_to "$claude_root/skills/unmanaged-dangling" "$test_root/unmanaged/missing"
+assert_link_to "$claude_root/skills/jbootz-helloworld" "$fixture/skills/jbootz-helloworld"
+
 fixture="$test_root/invalid-repo"
 copy_fixture "$fixture"
 mkdir -p "$fixture/skills/Bad_Name"

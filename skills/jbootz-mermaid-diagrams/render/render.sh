@@ -28,9 +28,18 @@ EOF
   exit 2
 }
 
-require_command() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "error: required command not found: $1" >&2
+# Check every tool a mode needs before rendering anything, so a missing tool
+# fails loudly instead of producing partial output.
+require_commands() {
+  local missing=()
+  local tool
+
+  for tool in "$@"; do
+    command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
+  done
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    echo "error: required command not found: ${missing[*]} (needed for $mode mode); install it and rerun" >&2
     exit 127
   fi
 }
@@ -47,12 +56,10 @@ if [[ ! -f "$src" ]]; then
 fi
 
 render_text() {
-  require_command mermaid-ascii
   mermaid-ascii --file "$src"
 }
 
 render_ascii() {
-  require_command mermaid-ascii
   mermaid-ascii --file "$src" --ascii
 }
 
@@ -66,8 +73,6 @@ default_output_base() {
 }
 
 render_svg() {
-  require_command mmdc
-
   local selected_output_base="$output_base"
   local output
   local output_dir
@@ -110,21 +115,25 @@ render_both() {
 case "$mode" in
   text)
     [[ $# -eq 2 ]] || usage
+    require_commands mermaid-ascii
     render_text
     ;;
 
   ascii)
     [[ $# -eq 2 ]] || usage
+    require_commands mermaid-ascii
     render_ascii
     ;;
 
   svg)
     [[ $# -le 3 ]] || usage
+    require_commands mmdc
     render_svg
     ;;
 
   both)
     [[ $# -le 3 ]] || usage
+    require_commands mermaid-ascii mmdc
     render_both
     ;;
 
