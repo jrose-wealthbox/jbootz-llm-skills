@@ -93,7 +93,7 @@ If Docker access is denied, request the wrapper permission once. Inspect shared-
 
 ## 3. Prepare flags and seeds
 
-Set up flags and seeds yourself; do not hand them to the user. For each required flag or seed: locate the repository-supported command/helper, run it through `bin/wealthbox`, verify it with a read-only `bin/wealthbox runner` or `bin/wealthbox psql` query, and record the exact command and result. Do this even when Step 2 skips startup. If it cannot be established from the repository, mark the prerequisite blocked.
+Set up flags and seeds yourself; do not hand them to the user. Never assume seeding enabled a gated feature: turn on each required Flipper flag for the QA actor and add any required `FeatureWhitelist` entry. For each required flag, whitelist entry, or seed: locate the repository-supported command/helper, run it through `bin/wealthbox`, verify it with a read-only `bin/wealthbox runner` or `bin/wealthbox psql` query, and record the exact command and result. Do this even when Step 2 skips startup. If it cannot be established from the repository, mark the prerequisite blocked.
 
 For AI/Generative View QA, record the flag and enabled actor/account, view name and ID, seeded user/account, expected button label, and expected persisted artifact/action state.
 
@@ -118,6 +118,11 @@ agent-browser snapshot -i
 ```
 
 Replace `<URL>` and `@eN` with the resolved application URL and a ref from the immediately preceding snapshot. Prefer a scenario-specific expected-text or URL wait when one is known; otherwise use the shown load wait. Re-snapshot after every navigation or dynamic re-render before using another ref.
+
+Headless workarounds for known screens:
+
+- Clicking a submit button does not submit login, Add Person, or Add Opportunity forms. Submit with `agent-browser eval "document.querySelector('<form selector>').requestSubmit()"`.
+- AI Agents trigger "Field" picker options are missing from `snapshot -i`. Focus the picker, then choose with ArrowDown and Enter.
 
 For each scenario, record the starting page, exact element and pre-click state, expected visible result, absence of internal XML/provider payloads/IDs/implementation text, and a screenshot path when useful.
 

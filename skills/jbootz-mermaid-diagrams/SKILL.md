@@ -70,6 +70,17 @@ supported syntax when equivalent.
 - `stateDiagram-v2`: state machines/lifecycles.
 - `classDiagram`: object/type relationships.
 
+"UML" means `sequenceDiagram` (participants are classes, arrows are method
+calls) or `classDiagram`, never `flowchart`.
+
+Markdown in a node label renders only when the whole label is
+backtick-wrapped: `A["`**bold** text`"]`. Without the backticks the asterisks
+render literally. Inner backticks break a wrapped label, so do not nest code
+spans in it.
+
+`sequenceDiagram` has no `classDef`. Mark changed steps with
+`rect rgb(r,g,b) ... end` bands plus a `Note`.
+
 For architecture diagrams, show clear boundaries, label non-obvious edges,
 keep diagrams readable, and split large diagrams when needed.
 
