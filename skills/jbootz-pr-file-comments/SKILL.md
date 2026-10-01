@@ -12,6 +12,8 @@ Post exactly one file-level review comment per target file in a GitHub pull requ
 - Default targets: every file in the PR, including removed and renamed files. Honor an explicit subset or exclusion.
 - Comment purpose comes from the request, for example the rationale for each change or deletion. Follow any example comment the user links; read it with `gh api` first.
 - Post as the authenticated `gh` user. Never edit or delete anyone else's comments.
+- Apply any prefix or format the user specifies, such as `🤖: `, to every comment.
+- In a sandboxed host, `gh` may lack network access or the user's token there. A sandboxed `gh` auth or network failure does not prove `gh` is unauthenticated: rerun it with the host's network or elevated permission before stopping.
 
 ## 1. Resolve the PR and its files
 

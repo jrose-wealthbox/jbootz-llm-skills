@@ -55,7 +55,9 @@ The content is copied into both host files instead of using an import directive:
 Claude Code supports `@path` imports, but Codex's official instruction-file
 documentation does not define an equivalent portable import syntax.
 
-Run the installer again after adding or renaming a skill. Editing an existing
+Run the installer again after adding, renaming, or deleting a skill. It removes
+installed links that point into this repository's `skills/` directory but no
+longer resolve, and leaves every other link alone. Editing an existing
 skill requires no reinstall; start a new agent session to pick up the change.
 Edit `global/global.md` or an agent's canonical source and run the installer
 again to render the changes. Adding or renaming an agent also requires
@@ -95,9 +97,19 @@ Every direct child of `skills/` is one skill and must:
 
 Included skills:
 
-- `jbootz-code-explainer`: explains repository structure, entities, execution
-  flows, and relevant Git history and pull requests.
-
+- `jbootz-adversarial-review`: verified PR or branch review that classifies
+  each bug as introduced by the branch or already on its base, judges the PR
+  against its Linear issue, and can weigh another reviewer's findings.
+- `jbootz-claude-review`: from Codex only, runs Claude Code as an independent,
+  read-only reviewer of a diff or plan.
+- `jbootz-crm-web-qa`: executes a crm-web browser QA plan with `agent-browser`
+  and verifies persisted state.
+- `jbootz-crm-web-qa-checklist`: writes crm-web QA plans that a person new to
+  the app, or a cheap agent, can follow.
+- `jbootz-gist-code-explainer`: publishes a repository or code explainer as a
+  secret GitHub Gist.
+- `jbootz-gist-pr-explainer`: publishes a terse, teammate-facing PR explainer
+  as a secret GitHub Gist.
 - `jbootz-helloworld`: installation smoke test. In a new Claude Code or Codex
   session, ask:
 
@@ -105,11 +117,32 @@ Included skills:
 
 The response should be exactly `Hello from jbootz-helloworld!`.
 
-- `jbootz-pr-explainer`: publishes a terse, teammate-facing PR explainer as a
-  secret GitHub Gist.
+- `jbootz-human-readability`: proposes readability fixes with before/after
+  snippets and edits only approved items.
+- `jbootz-mermaid-diagrams`: writes Mermaid source and renders terminal text or
+  SVG.
+- `jbootz-pr-file-comments`: posts exactly one file-level comment per file in
+  a GitHub PR and verifies the count.
+- `jbootz-session-postmortem`: reviews recent Codex and Claude Code sessions
+  for process improvements.
 
 Secret Gists are unlisted, not access-controlled. Anyone with the URL can read
-one; do not use this workflow for content that cannot be shared that way.
+one; do not use the Gist explainers for content that cannot be shared that way.
+
+### External tools
+
+Some skills need command-line tools that this repository does not install.
+They stop with an error naming the missing tool rather than falling back:
+
+- `gh`, authenticated: the Gist explainers, `jbootz-pr-file-comments`, and
+  `jbootz-adversarial-review`.
+- `mermaid-ascii` (terminal rendering) and `mmdc` from Mermaid CLI (SVG):
+  `jbootz-mermaid-diagrams` and the diagrams in both Gist explainers.
+- `agent-browser` and `jq`: the crm-web QA skills.
+- `claude`: `jbootz-claude-review`.
+
+`make test` exercises the Mermaid renderer and fails if `mermaid-ascii` or
+`mmdc` is missing.
 
 ## Agents
 

@@ -53,6 +53,13 @@ If a flag or seed command cannot be verified in the repository, mark the prerequ
 
 Each step must state the exact page or visible label, action, expected and prohibited visible results, the readiness wait before the next snapshot, and tool (`agent-browser` or headless Playwright).
 
+Write for a reader who has never used the app; this is the default, not an option the user has to request:
+
+- Start each test from a named page and give the full click path, using the menu, tab, and button labels exactly as they appear.
+- Say how to create every piece of test data: the screen and fields to fill, or a repository command. Name the record so later steps can find it.
+- Say where each result appears, for example which tab or panel of the record page shows the changed custom field, and how to get there.
+- Define each domain term the first time it appears. Never use internal names, class names, request types, or code identifiers as UI instructions.
+
 Example:
 
 - Open the resolved URL, sign in through the seeded-user flow, and confirm the account indicator shows Bill Jones; then open `Morning Brief QA Generative View`, click `Help me plan the compliance filing`, and confirm the friendly result contains no `<artifact_action>`, internal IDs, or provider parameters.
@@ -103,6 +110,8 @@ Include only scenarios relevant to the diff, but retain cross-surface coverage w
 Before publishing, verify that:
 
 - every checkbox is executable and flags/seeds are concrete;
+- every navigation path and label was checked against the running app with an `agent-browser` snapshot, or against the view or component source when the app is unavailable (say which);
+- a reader new to the app could find every record, field, and result named in the plan;
 - no credentials are embedded;
 - browser proof and persisted-state proof are separate;
 - tests/specs are not proposed as feature/system specs;

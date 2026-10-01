@@ -1,6 +1,6 @@
 ---
 name: jbootz-gist-pr-explainer
-description: Use when drafting terse teammate-facing PR explainers from GitHub and Linear evidence.
+description: Use only when explicitly asked to publish a PR explainer as a secret GitHub Gist for teammates; not for answering questions about a PR in chat.
 ---
 
 # PR Explainer
@@ -10,6 +10,8 @@ Write a terse, plain Markdown explainer for Rails and TypeScript developers, foc
 ## Preconditions
 
 Stop if no PR is supplied, it is inaccessible, `gh` is unavailable or unauthenticated, or its Linear issue number/title cannot be established. Never guess identifiers.
+
+In a sandboxed host, `gh` may lack network access or the user's token there. A sandboxed `gh` auth or network failure does not prove `gh` is unauthenticated: rerun it with the host's network or elevated permission before stopping.
 
 ## Evidence
 
@@ -80,8 +82,10 @@ disagreement, feedback-driven changes, or edits outside the expected feature are
 For diagrams, load
 [jbootz-mermaid-diagrams](../jbootz-mermaid-diagrams/SKILL.md) and follow its
 selection, ASCII-rendering, and size guidance. Include only faithful, readable
-ASCII in a fenced `text` block; omit the `.mmd` source unless requested. If
-ASCII is unclear, use prose.
+ASCII in a fenced `text` block; omit the `.mmd` source unless requested. If a
+rendered diagram is unclear, use prose. If the renderer reports a missing tool,
+stop and tell the user which tool is missing; never hand-draw the diagram or
+silently drop it.
 
 ## Publish
 

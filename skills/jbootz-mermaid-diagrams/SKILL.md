@@ -28,6 +28,17 @@ render.sh both docs/architecture.mmd docs/architecture
 # writes docs/architecture.svg
 ```
 
+## Required tools
+
+- `text` and `ascii`: `mermaid-ascii`.
+- `svg`: `mmdc` (Mermaid CLI).
+- `both`: both tools.
+
+The renderer checks a mode's tools before rendering and exits with status 127,
+naming every missing tool. When that happens, stop and tell the user which tool
+is missing and what output it blocks. Never hand-draw a diagram, switch to
+another renderer, or silently drop the diagram to work around a missing tool.
+
 ## Workflow
 
 1. Unless user requests repository artifacts, create a unique temp directory
@@ -44,8 +55,10 @@ Temporary sources/default SVGs stay under `${TMPDIR:-/tmp}`; explicit repository
 artifacts normally include both `diagram.mmd` and `diagram.svg`. SVG is
 compatibility authority; terminal preview may support fewer Mermaid features.
 
-`both` still attempts SVG if terminal rendering fails. If SVG succeeds, keep it
-and warn about terminal incompatibility. Preserve valid source/SVG; do not
+When both tools are installed, `both` still renders SVG if the terminal renderer
+cannot handle a valid diagram. If SVG succeeds, keep it and warn about terminal
+incompatibility. A missing tool is different: `both` fails before rendering
+anything. Preserve valid source/SVG; do not
 change diagram meaning merely to satisfy terminal limitations. Prefer broadly
 supported syntax when equivalent.
 

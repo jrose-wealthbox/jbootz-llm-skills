@@ -14,6 +14,7 @@ Examples:
 
 ## Review scope
 
+- Apply any host, repository, worktree, or date filter in the request or arguments (for example, Claude Code only) before indexing, and state it in the coverage note.
 - Analyze the active conversation first.
 - Review up to 24 conversations total, including the active conversation, from the most recent 30 days. If fewer are available, do not expand the date range unless the user asks.
 - Identify the current worktree and Git repository when available. Select up to eight other conversations from this exact worktree, then up to eight from other worktrees in the same repository, then fill remaining slots with recent conversations from other repositories. Within each group, prefer the newest. If a group has fewer conversations, pass its unused slots to the next group. Never exceed 24 total.

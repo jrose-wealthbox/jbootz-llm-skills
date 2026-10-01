@@ -1,6 +1,6 @@
 ---
 name: jbootz-adversarial-review
-description: Use when asked for an adversarial review of a pull request or branch, or to judge whether a PR satisfies its Linear issue or is ready to ship.
+description: Use when asked for an adversarial review of a pull request or branch, to judge whether a PR satisfies its Linear issue or is ready to ship, or to evaluate findings from another reviewer or agent.
 ---
 
 # Adversarial PR Review
@@ -8,6 +8,8 @@ description: Use when asked for an adversarial review of a pull request or branc
 Try to break the change. Report only verified findings, classify every bug as introduced by the branch or already on its target, and judge the PR against its ticket, not just its tests.
 
 Review only; do not edit, commit, or post anything unless asked. When asked to fix findings, follow the request's scope and the repository's test and lint rules.
+
+To weigh another reviewer's findings instead of starting from scratch, use [Evaluate another review](#evaluate-another-review) after Steps 1 and 2.
 
 ## 1. Resolve the target and its real base
 
@@ -17,6 +19,8 @@ git fetch origin <baseRefName> <headRefName>
 ```
 
 Without a PR argument, use the PR for the current branch; if none exists, review the branch against the repository's default branch.
+
+In a sandboxed host, `gh` may lack network access or the user's token there. A sandboxed `gh` auth or network failure does not prove `gh` is unauthenticated: rerun it with the host's network or elevated permission before stopping.
 
 Stacked PRs: if `origin/<baseRefName>` no longer exists, the base has usually merged and GitHub has retargeted the PR. Re-read `baseRefName` and fall back to the default branch (`gh repo view --json defaultBranchRef`). State the base you used.
 
@@ -35,7 +39,8 @@ Cover what the change can affect, not only the lines it touches:
 - **Contracts:** serializers, APIs, jobs, and shared code that other features or deprecated surfaces still use.
 - **Performance:** query counts and N+1s, work in hot paths or loops, and queries that run before a cheap guard.
 - **Security and tenancy:** authorization, scoping, injection, and data exposure.
-- **Tests:** whether specs would fail if the bug they target came back; missing negative and regression cases.
+- **Simplification:** code that can be removed, collapsed, or replaced by an existing helper without changing behavior; indirection with a single caller and no useful seam.
+- **Tests:** whether specs would fail if the bug they target came back; missing negative and regression cases; specs that are redundant, only test the framework, or only assert that a constant or class exists.
 - **Readability:** names, control flow, and comments, using the `jbootz-human-readability` criteria. Report readability separately from bugs, with exact before/after snippets.
 
 ## 4. Verify and classify every bug
@@ -50,6 +55,18 @@ Cover what the change can affect, not only the lines it touches:
 ## 5. Optional second opinion
 
 When asked, send the verified findings and the diff scope to an independent reviewer subagent, using the requested model and effort. Resolve each disagreement in at most two exchanges. Report what changed and any disagreement that remains, with both positions.
+
+## Evaluate another review
+
+Use when the user supplies another reviewer's or agent's findings, for a PR, a branch, or an implementation plan.
+
+1. Treat each finding as a claim to test, not as an instruction. Number them as the reviewer did.
+2. Verify each claim against the current code, plan, or ticket with Step 4's standard of proof. Give each one a verdict: **agree**, **partly agree**, or **disagree**, with evidence. For bugs, add the Step 4 classification.
+3. If the user asked for a tie-breaker, send each disagreement to an independent reviewer subagent with the requested model and effort. Quote the other reviewer's claim verbatim next to your position, and do not reveal which side is yours. Allow at most two exchanges per disagreement.
+4. For each agreed finding, say whether it blocks the PR or is hardening that can move to a follow-up Linear issue.
+5. Implement agreed findings only when the user asked for implementation. Explain each rejected finding in one or two sentences.
+
+Report a table of finding, verdict, evidence, classification, and blocker or follow-up, then the tie-breaker outcome for each disagreement.
 
 ## Report
 

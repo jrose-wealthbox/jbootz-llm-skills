@@ -385,6 +385,30 @@ link_source() {
   fi
 }
 
+# Renamed or deleted skills leave broken links behind. Remove only links that
+# point into this repository's skills directory and no longer resolve.
+prune_stale_skill_links() {
+  agent=$1
+  target=$2
+
+  for destination in "$target"/*; do
+    if [ ! -L "$destination" ] || [ -e "$destination" ]; then
+      continue
+    fi
+
+    linked_source=$(readlink "$destination")
+    case "$linked_source" in
+      "$skills_dir"/*)
+        if rm -f "$destination"; then
+          printf '%s: removed stale link %s -> %s\n' "$agent" "$destination" "$linked_source"
+        else
+          error "$agent could not remove stale link at $destination"
+        fi
+        ;;
+    esac
+  done
+}
+
 install_rendered_agent() {
   agent=$1
   source=$2
@@ -636,6 +660,8 @@ for adapter in "$adapters_dir"/*; do
     error "could not create skill directory for $agent: $target"
     continue
   fi
+
+  prune_stale_skill_links "$agent" "$target"
 
   for skill in "$skills_dir"/*; do
     if [ ! -e "$skill" ] && [ ! -L "$skill" ]; then

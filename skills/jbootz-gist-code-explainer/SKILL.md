@@ -1,6 +1,6 @@
 ---
 name: jbootz-gist-code-explainer
-description: Use when generating an artifact to explain a repository, map entities, trace execution flows, or review relevant code history and pull requests.
+description: Use only when explicitly asked to publish a code or repository explainer (architecture, entities, execution flows, history) as a secret GitHub Gist; not for answering questions about code in chat.
 ---
 
 # Gist Code Explainer
@@ -19,13 +19,15 @@ Explain code from repository evidence. Keep to the requested scope; a whole-repo
 - Inspect recent, relevant commits and diffs for the scoped paths or symbols; use blame to locate edits that need context.
 - Find open or merged PRs touching the scoped code through commit links or changed paths when the Git host supports it. Include dates, commit SHAs, PR titles, and links; describe only changes supported by the diff or PR.
 - Do not infer author intent from code or commit titles alone. Label other explanations as inference and do not claim an exhaustive PR search when results are limited.
-- If Git metadata or remote access is unavailable, explain the current code and state which history could not be checked. PR, Linear, and Gist access are not preconditions.
+- If Git metadata or remote access is unavailable, explain the current code and state which history could not be checked. PR and Linear access are not preconditions; publishing requires an authenticated `gh`.
+
+In a sandboxed host, `gh` may lack network access or the user's token there. A sandboxed `gh` auth or network failure does not prove `gh` is unauthenticated: rerun it with the host's network or elevated permission before stopping.
 
 ## Explanation
 
 Include only useful sections: architecture map, entity relationships, execution flows, and recent changes with related PRs. Cite current behavior to files and lines; cite history with commit dates and SHAs or PR links.
 
-For diagrams, follow [jbootz-mermaid-diagrams](../jbootz-mermaid-diagrams/SKILL.md) for selection, rendering, and size limits.
+For diagrams, follow [jbootz-mermaid-diagrams](../jbootz-mermaid-diagrams/SKILL.md) for selection, rendering, and size limits. If the renderer reports a missing tool, stop and tell the user which tool is missing; never hand-draw the diagram or silently drop it.
 
 ## Publish
 

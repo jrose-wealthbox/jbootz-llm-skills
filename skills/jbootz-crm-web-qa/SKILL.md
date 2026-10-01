@@ -15,7 +15,7 @@ Execute a complete QA plan for the current CRM-web branch. `jbootz-crm-web-qa-ch
 - `run` with a complete plan: preserve it unchanged and execute it.
 - `run` with an incomplete plan: preserve correct content, use the checklist only to fill gaps, then execute.
 - `run` without a plan: generate one with the checklist, then execute it.
-- Honor an explicit headless-Playwright request; otherwise use `agent-browser`.
+- Honor an explicit headless-Playwright request; otherwise use `agent-browser`. Do not switch tools mid-run; if `agent-browser` is unavailable, report that and ask before using Playwright.
 
 When planning is required, load the checklist through the harness's normal skill mechanism; skill names are instruction sources, not callable functions. If unavailable, read the sibling `../jbootz-crm-web-qa-checklist/SKILL.md`; if neither is available, report planning blocked. Before execution, accept a plan only when its relevant environment, dependency, flag, seed, login, browser, and persisted-state instructions are concrete and consistent with the request and acceptance criteria.
 
@@ -25,6 +25,7 @@ When planning is required, load the checklist through the harness's normal skill
 - Treat click timeouts as inconclusive until the next URL and accessibility snapshot are checked.
 - Never reset a seeded user's password through admin or invent seed commands/SQL.
 - Never clean or stage pre-existing worktree files, QA screenshots, `output/`, `.playwright-cli/`, or unrelated database drift.
+- Run only commands the plan or this skill names, plus read-only inspection you can justify. Never invent queries against columns or tables you have not confirmed in the schema.
 
 ## 0. Capture the baseline
 
@@ -92,13 +93,15 @@ If Docker access is denied, request the wrapper permission once. Inspect shared-
 
 ## 3. Prepare flags and seeds
 
-For each required flag or seed: locate the repository-supported command/helper, run it through `bin/wealthbox`, verify it with a read-only `bin/wealthbox runner` or `bin/wealthbox psql` query, and record the exact command and result. Do this even when Step 2 skips startup. If it cannot be established from the repository, mark the prerequisite blocked.
+Set up flags and seeds yourself; do not hand them to the user. For each required flag or seed: locate the repository-supported command/helper, run it through `bin/wealthbox`, verify it with a read-only `bin/wealthbox runner` or `bin/wealthbox psql` query, and record the exact command and result. Do this even when Step 2 skips startup. If it cannot be established from the repository, mark the prerequisite blocked.
 
 For AI/Generative View QA, record the flag and enabled actor/account, view name and ID, seeded user/account, expected button label, and expected persisted artifact/action state.
 
 ## 4. Log in
 
 Use `local-account-login` for seeded users such as `bill@patriot.com`; never retrieve a user through admin to change its password. After login, verify the current URL, an accessibility snapshot, and a visible user/account indicator.
+
+Sessions can expire during long runs. Whenever a snapshot shows the sign-in page, log in again and repeat the interrupted step; an expired session is never a reason to mark later cases blocked.
 
 ## 5. Execute browser scenarios
 
@@ -117,6 +120,12 @@ agent-browser snapshot -i
 Replace `<URL>` and `@eN` with the resolved application URL and a ref from the immediately preceding snapshot. Prefer a scenario-specific expected-text or URL wait when one is known; otherwise use the shown load wait. Re-snapshot after every navigation or dynamic re-render before using another ref.
 
 For each scenario, record the starting page, exact element and pre-click state, expected visible result, absence of internal XML/provider payloads/IDs/implementation text, and a screenshot path when useful.
+
+Make each case independent:
+
+- Record the relevant state (list contents, counts, or persisted values) before acting, and compare it afterwards. If nothing changed, the action did not apply; never read state left by an earlier case as this case's result.
+- Steps that call an LLM or other nondeterministic service can fail intermittently. Retry such a step up to 3 times, recording each attempt and its exact error text. Mark the case failed only if every attempt fails.
+- One failed or blocked case never blocks the others; continue to the next case.
 
 For AI artifact actions, test each relevant surface separately: regular AI chat, AI agent chat, Generative View, and native/mobile serialization when shared serializers are changed.
 
