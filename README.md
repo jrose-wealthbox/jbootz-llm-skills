@@ -119,6 +119,8 @@ The response should be exactly `Hello from jbootz-helloworld!`.
 
 - `jbootz-human-readability`: proposes readability fixes with before/after
   snippets and edits only approved items.
+- `jbootz-memory-audit`: finds stale, wrong, redundant, or superseded Claude
+  Code and Codex memories and changes only approved items.
 - `jbootz-mermaid-diagrams`: writes Mermaid source and renders terminal text or
   SVG.
 - `jbootz-pr-file-comments`: posts exactly one file-level comment per file in
