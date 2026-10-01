@@ -57,26 +57,36 @@ Never run bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compo
 
 ## 2. Verify the environment only when needed
 
-Inspect service state and probe the resolved Rails health endpoint first. Record the application URL and runtime mode:
+Read service state first, and start the stack only when Rails is not running or has no URL. Record the application URL and runtime mode:
 
 ```bash
 status_json="$(bin/wealthbox status 2>/dev/null || true)"
-rails_health_url="$(jq -r '.services.rails.localhost // .services.rails.url // empty' <<<"$status_json")"
-rails_app_url="$(jq -r '.services.rails.url // .services.rails.localhost // empty' <<<"$status_json")"
+rails_running="$(jq -r '.services.rails.running // false' <<<"$status_json")"
+rails_url="$(jq -r '.services.rails.localhost // .services.rails.url // empty' <<<"$status_json")"
 
-if [ -n "$rails_health_url" ] && curl --fail --silent --show-error --max-time 5 \
-  "$rails_health_url/healthcheck" >/dev/null 2>&1; then
-  echo "Rails is already healthy at $rails_health_url; skipping bin/wealthbox up -d --wait."
-else
+if [ "$rails_running" != "true" ] || [ -z "$rails_url" ]; then
   bin/wealthbox up -d --wait
   status_json="$(bin/wealthbox status)"
-  rails_app_url="$(jq -r '.services.rails.url // .services.rails.localhost // empty' <<<"$status_json")"
+  rails_url="$(jq -r '.services.rails.localhost // .services.rails.url // empty' <<<"$status_json")"
 fi
 
-echo "QA application URL: $rails_app_url"
+echo "QA application URL: $rails_url"
 ```
 
-Run `bin/wealthbox up -d --wait` only when the probe fails, status lacks a usable URL, or the request explicitly requires restart/rebuild. The detached, health-waiting form is required so the QA shell block can continue to its post-start status refresh. If a later check shows a stale or unhealthy stack, run it once and re-probe; do not repeat speculatively. Do not call `bin/wealthbox status rails --url` or duplicate status calls when JSON already provides `services.rails.url`.
+Use `services.rails.localhost` for headless `agent-browser`; the `*.wealthbox.local` URL in `services.rails.url` may not resolve there. Fall back to it only when `localhost` is absent.
+
+Confirm health through the QA browser session, which Step 5 reuses:
+
+```bash
+agent_browser_session="$(agent-browser session id --scope worktree --prefix crm-qa)"
+export AGENT_BROWSER_SESSION="$agent_browser_session"
+agent-browser open "$rails_url/healthz"
+agent-browser get text body
+```
+
+Healthy output is exactly `success`; anything else (an error list, routing error, or connection failure) is unhealthy. The route is `/healthz`; crm-web has no `/healthcheck`. Do not probe with `curl`, `python3`, or another ad-hoc HTTP client: automatic permission review and sandboxes routinely deny those against local servers, while `agent-browser` is the QA tool already in use.
+
+Run `bin/wealthbox up -d --wait` only when status shows Rails stopped, status lacks a usable URL, the health probe fails, or the request explicitly requires restart/rebuild. It is detached and waits for health, so the QA block can continue to its post-start status refresh. If a later check shows a stale or unhealthy stack, run it once and re-probe; do not repeat speculatively. Do not call `bin/wealthbox status rails --url` or duplicate status calls when JSON already provides the URL.
 
 If Docker access is denied, request the wrapper permission once. Inspect shared-service configuration warnings before stopping or restarting shared services.
 
@@ -92,11 +102,10 @@ Use `local-account-login` for seeded users such as `bill@patriot.com`; never ret
 
 ## 5. Execute browser scenarios
 
-Use accessibility snapshots and stable visible labels:
+Use accessibility snapshots and stable visible labels, in the Step 2 browser session. The session id is stable per worktree, so re-export it in each new shell:
 
 ```bash
-agent_browser_session="$(agent-browser session id --scope worktree --prefix crm-qa)"
-export AGENT_BROWSER_SESSION="$agent_browser_session"
+export AGENT_BROWSER_SESSION="$(agent-browser session id --scope worktree --prefix crm-qa)"
 agent-browser open <URL>
 agent-browser wait --load domcontentloaded
 agent-browser snapshot -i

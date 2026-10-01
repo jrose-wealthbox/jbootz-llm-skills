@@ -26,7 +26,7 @@ Linear acceptance criteria are an independent product oracle; passing tests do n
 Every plan must name:
 
 - the exact worktree-URL command;
-- the health check, resolved Rails URL, and condition requiring `bin/wealthbox up -d --wait`;
+- the `bin/wealthbox status` check, resolved Rails URL, browser health probe, and condition requiring `bin/wealthbox up -d --wait`;
 - dependency, feature-flag, and seed-data setup;
 - the seeded account/user and `local-account-login` flow;
 - required role, allowlist, or rollout state.
@@ -45,7 +45,7 @@ bin/wealthbox exec bundle install
 
 Never include bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compose`.
 
-Do not prescribe `bin/wealthbox up -d --wait` unconditionally. Inspect `bin/wealthbox status` and probe the resolved Rails `/healthcheck`; run `bin/wealthbox up -d --wait` only when the probe fails, the URL is unavailable, or the request explicitly requires a restart/rebuild. Use the detached, health-waiting form so follow-up status and browser steps run after startup completes.
+Do not prescribe `bin/wealthbox up -d --wait` unconditionally. Inspect `bin/wealthbox status` for `services.rails.running` and the URL; use `services.rails.localhost` for headless `agent-browser`, falling back to `services.rails.url`. Probe health in the browser: `agent-browser open <url>/healthz`, then `agent-browser get text body`, expecting exactly `success`. The route is `/healthz`; crm-web has no `/healthcheck`. Never prescribe `curl`, `python3`, or another ad-hoc HTTP client for the probe: automatic permission review and sandboxes routinely deny them against local servers. Run `bin/wealthbox up -d --wait` only when Rails is not running, the URL is unavailable, the probe fails, or the request explicitly requires a restart/rebuild. Use the detached, health-waiting form so follow-up status and browser steps run after startup completes.
 
 If a flag or seed command cannot be verified in the repository, mark the prerequisite blocked; never invent commands.
 

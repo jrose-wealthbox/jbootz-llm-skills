@@ -11,6 +11,8 @@ When the user explicitly requests one-shot execution or opts out of optional wor
 
 Check for tools required by the requested workflow before investing in it. If a required tool or access is unavailable, stop that workflow, tell the user what is missing and how it affects the result, and wait before using a materially slower or less effective workaround. Continue with a fallback when the user has authorized it.
 
+Use `jq` or `Read` to parse JSON, not `python -c`, unless python is truly needed for complex parsing `jq` can't handle.
+
 ## Jbootz.SCOUT delegation
 
 Use the `Jbootz.SCOUT` subagent for bounded mechanical work when the command is known or can be stated exactly and the result can be summarized as evidence. Examples: running specified tests, searching the repository, parsing verbose logs, and reporting aggregate counts with complete failure details.

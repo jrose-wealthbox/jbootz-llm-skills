@@ -5,7 +5,12 @@ description: Review recent Codex CLI and Claude Code sessions for recurring work
 
 # Session Postmortem
 
-Review recent conversations and recommend only evidence-backed process changes that reduce token cost, speed up agent work, or improve results. Work in either Codex CLI or Claude Code, using whichever session histories are accessible.
+Review recent conversations and recommend only evidence-backed process changes that reduce token cost, speed up agent work, or improve results. Review only sessions applicable to the current active app/harness.
+
+Examples:
+
+- If you are Opus, Fable, Sonnet or another Anthropic model, look only at Claude conversations.
+- If you are Astra, Sol, Terra, Luna or another OpenAI model, look only at Codex conversations.
 
 ## Review scope
 
