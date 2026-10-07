@@ -19,6 +19,8 @@ Use the `Jbootz.SCOUT` subagent for bounded mechanical work when the command is 
 
 Give `Jbootz.SCOUT` the exact command, working directory, constraints, and required report format. Jbootz.SCOUT observes and compresses evidence; the parent agent remains responsible for diagnosis, decisions, and edits. Do not delegate ambiguous requirements, root-cause analysis, architectural decisions, security judgments, code-quality validation, correctness validation, or source changes to Jbootz.SCOUT unless the user specifically asks.
 
+Filter large output with `rg`, `jq`, or bounded `sed` first. For semantic compression, give `Jbootz.SCOUT` one bounded read; request counts, relevant evidence, and complete failures. Avoid duplicate parent reads. Treat truncation as incomplete evidence: narrow or delegate, never raise the limit.
+
 ## Browser Automation
 
 Use `agent-browser` for web automation. `agent-browser --help` for all commands.
