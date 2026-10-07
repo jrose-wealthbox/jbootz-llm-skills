@@ -46,6 +46,7 @@ Cover what the change can affect, not only the lines it touches:
 ## 4. Verify and classify every bug
 
 - Prove each bug with a failing spec, a script, or a precise trace through the code. Delete throwaway specs and scripts when done, and restore any files a test run rewrote.
+- Before assigning severity or blocker status, verify that users can reach the defect through a current UI/API path or existing stored state. State any unverified prerequisite and qualify the impact; do not call an unproven scenario a current blocker.
 - Classify each bug, with evidence:
   - **Introduced by this branch:** absent or behaving correctly on the base.
   - **Already on `<base>`:** reproduce it on the base, or show that the defect lives in code the branch does not change.
@@ -72,7 +73,7 @@ Report a table of finding, verdict, evidence, classification, and blocker or fol
 
 1. **Scope:** PR, base actually used, commit and file counts, and anything not reviewed.
 2. **Ticket fit:** each acceptance criterion as met, partial, or unmet, with evidence.
-3. **Findings:** ranked by severity. For each: `file:line`, the concrete failure scenario, evidence, *introduced by this branch* or *already on `<base>`*, and the smallest fix.
+3. **Findings:** ranked by severity. For each: `file:line`, the user path or unverified prerequisite, concrete failure scenario, evidence, *introduced by this branch* or *already on `<base>`*, and the smallest fix.
 4. **Readability:** numbered before/after items.
 5. **Checks run:** commands and results, including tests or linters that were not run.
 6. **Verdict:** ready to ship, ready after named fixes, or not ready.
