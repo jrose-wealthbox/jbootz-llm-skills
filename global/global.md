@@ -23,7 +23,7 @@ Filter large output with `rg`, `jq`, or bounded `sed` first. For semantic compre
 
 ## Browser Automation
 
-Use `agent-browser` for web automation. `agent-browser --help` for all commands.
+Use headless `agent-browser` for web automation. `agent-browser --help` for all commands.
 
 Core workflow:
 
@@ -31,6 +31,10 @@ Core workflow:
 2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
 3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
 4. Re-snapshot after page changes
+
+## When Working in crm-web
+
+- When local QA reports pending development migrations, run `bin/wealthbox exec bundle exec rails db:migrate`, then resume QA. A webserver restart does not apply migrations; do not hand this step back to the user.
 
 ## Skills
 
