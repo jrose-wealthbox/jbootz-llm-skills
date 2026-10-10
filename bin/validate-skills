@@ -14,6 +14,9 @@ unless skills_dir.directory?
 end
 
 Dir.children(skills_dir).sort.each do |entry|
+  # Match bin/install, whose shell glob never sees hidden entries like .DS_Store.
+  next if entry.start_with?(".")
+
   skill_dir = skills_dir.join(entry)
   unless skill_dir.directory?
     errors << "#{skill_dir}: skill entry is not a directory"
