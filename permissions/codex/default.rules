@@ -8,3 +8,48 @@ prefix_rule(pattern=["gh", "pr", "checks"], decision="allow")
 prefix_rule(pattern=["gh", "api", "repos/starburstlabs/crm-web/pulls/22048/comments"], decision="allow")
 prefix_rule(pattern=["gh", "api", "-H", "Accept: application/vnd.github.raw+json", "repos/starburstlabs/crm-web/contents/app/lib/composer/agents/process_event_triggers.rb?ref=33f974069eb26f6262dc8eabac436688a5cb3e07"], decision="allow")
 prefix_rule(pattern=["gh", "api", "-H", "Accept: application/vnd.github.raw+json", "repos/starburstlabs/crm-web/contents/spec/lib/composer/agents/process_event_triggers_spec.rb?ref=33f974069eb26f6262dc8eabac436688a5cb3e07"], decision="allow")
+prefix_rule(pattern=["git", "switch", "-c", "focus-sounds"], decision="allow")
+prefix_rule(pattern=["mise", "exec", "--", "bundle", "exec", "ruby"], decision="allow")
+prefix_rule(pattern=["rm", "-f", "/tmp/rubyplayer-focus-trace.log"], decision="allow")
+
+prefix_rule(
+    pattern = ["rg"],
+    decision = "allow",
+    justification = "Allow all ripgrep searches and file listings",
+    match = [
+        "rg",
+        "rg --files",
+        "rg -n TODO .",
+    ],
+    not_match = [
+        "rgrep TODO .",
+    ],
+)
+
+prefix_rule(
+    pattern = ["jq"],
+    decision = "allow",
+    justification = "Allow all jq JSON queries and transformations",
+    match = [
+        "jq",
+        "jq . input.json",
+        "jq -r .name input.json",
+    ],
+    not_match = [
+        "jql . input.json",
+    ],
+)
+
+prefix_rule(
+    pattern = ["ast-grep"],
+    decision = "allow",
+    justification = "Allow all ast-grep structural searches",
+    match = [
+        "ast-grep",
+        "ast-grep --version",
+        "ast-grep -p foo -l ruby app",
+    ],
+    not_match = [
+        "astgrep -p foo -l ruby app",
+    ],
+)
