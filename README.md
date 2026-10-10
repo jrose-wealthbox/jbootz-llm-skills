@@ -127,6 +127,9 @@ The response should be exactly `Hello from jbootz-helloworld!`.
   a GitHub PR and verifies the count.
 - `jbootz-session-postmortem`: reviews recent Codex and Claude Code sessions
   for process improvements.
+- `jbootz-work-summary`: summarizes recent Codex and Claude Code work in the
+  current worktree, branch, or session as a tagged, chronological journal with
+  parseable metadata.
 
 Secret Gists are unlisted, not access-controlled. Anyone with the URL can read
 one; do not use the Gist explainers for content that cannot be shared that way.
