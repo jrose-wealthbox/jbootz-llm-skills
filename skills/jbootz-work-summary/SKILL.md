@@ -126,13 +126,13 @@ Use this format for each task. The second sub-bullet (the deep technical explana
   - Plain English summary in 1–2 sentences.
   - Deep technical explanation, when the task or decision is complex.
   - Decision: added a memoized `query_cache` object. Rejected: a Redis cache, because the data is only used for one request.
-  - *[categories=optimizing,building duration=58m host=claude model=claude-opus-5-5 effort=medium tokens_in=1.2M tokens_cached=980k tokens_out=40k tokens_reasoning=unknown sessions=ce6af167 repo=acme/app branches=perf-sql commits=2 lines=+120,-30 files=4 user_turns=6 tool_calls=42 tool_errors=3 perm_prompts=1 perm_auto=12 perm_denials=1 subagents=1 skills=none mcps=serena entrypoint=cli permission_mode=auto]*
+  - *[categories=optimizing,building duration=58m host=claude model=claude-opus-5-5 effort=medium tokens_in=1.2M tokens_cached=980k tokens_out=40k sessions=ce6af167 repo=acme/app branches=perf-sql commits=2 lines=+120,-30 files=4 user_turns=6 tool_calls=42 tool_errors=3 perm_prompts=1 perm_auto=12 perm_denials=1 subagents=1 skills=none mcps=serena entrypoint=cli permission_mode=auto]*
 ```
 
 Metadata rules, so that one regex can parse the line:
 
 - Format is `key=value`, separated by spaces. Values never contain spaces; lists are comma-separated.
-- Required keys, in this order:
+- Keys, in this order:
 
 | Group | Keys |
 |---|---|
@@ -144,7 +144,7 @@ Metadata rules, so that one regex can parse the line:
 | Tools | `skills` (skill names), `mcps` (MCP server names, not tool names) |
 | Settings | `entrypoint` (`cli`, `ide`, `desktop`, `exec`, and similar), `permission_mode` (Claude permission mode; for Codex, `<approval_policy>/<sandbox_policy>`) |
 
-- Use `unknown` for a value that is not available, and `none` for an empty list. Do not leave out a required key.
+- Leave out a key whose value is not available. Readers must treat a missing key as unknown, because the key list changes over time. A measured zero or empty list is data, not unknown: write `0` or `none`.
 - `model` and `effort` are the values that were used most in the task. If more than one was used, list them comma-separated, most used first.
 - Permission keys count tool calls only:
   - `perm_prompts`: the user was asked to approve. Claude: `permissionDecision.source` starts with `user`. Codex: an approval request that the user answered.
@@ -159,7 +159,7 @@ Metadata rules, so that one regex can parse the line:
 1. **Coverage note:** the scope rule that was used, sessions included for each host, the date range, and the limit that was reached. Also give the number of older sessions that were left out, and any sources that were not available. End it with one run metadata line, in the same `key=value` format:
 
    ```
-   *[run machine=jbootz-mbp generated=2026-10-10T14:40-04:00 tz=America/New_York scope=branch budget_hit=digest sessions_claude=3 sessions_codex=5 sessions_omitted=14 claude_version=2.1.296 codex_version=unknown]*
+   *[run machine=jbootz-mbp generated=2026-10-10T14:40-04:00 tz=America/New_York scope=branch budget_hit=digest sessions_claude=3 sessions_codex=5 sessions_omitted=14 claude_version=2.1.296]*
    ```
 
    The first token `run` separates this line from task lines. Get `machine` from `scutil --get ComputerName` on macOS, else `hostname -s`, with spaces replaced by `-`. `scope` is `worktree`, `branch`, or `session`. `budget_hit` is `digest`, `raw`, or `none`. Versions are the newest in the included sessions.
