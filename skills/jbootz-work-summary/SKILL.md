@@ -33,10 +33,15 @@ Always include the newest session, even when it alone exceeds a limit. Never tru
 
 Read both harnesses, whatever harness you are running in. Check `CLAUDE_CONFIG_DIR` and `CODEX_HOME`. The defaults are `~/.claude/projects/<cwd-slug>/*.jsonl` and `~/.codex/sessions/**/*.jsonl`. Transcript schemas change between versions, so check the fields in a sample before you depend on them. Recently observed fields:
 
-- **Claude:** on each entry, `timestamp`, `cwd`, `gitBranch`, `sessionId`, and `effort`. On assistant entries, `message.model` and `message.usage` (`input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`). Entries with `isSidechain: true`, and sibling files or directories, are subagent work. Also: `permissionDecision` (`decision`, `source`), `permission-mode` entries (`permissionMode`), `entrypoint`, `version`, and `file-history-delta.trackingPath` (files the agent edited). Skills: `Skill` tool calls (`input.skill`) and slash commands (`<command-name>` in a user message). MCP: tool names `mcp__<server>__<tool>`.
-- **Codex:** `session_meta.payload` contains `cwd` and `git` (this can be null). `turn_context.payload` contains `model` and `effort`. `event_msg` with `payload.type=="token_count"` contains cumulative `info.total_token_usage`, so use deltas for each task; it also has `reasoning_output_tokens`. `session_meta.payload` also has `cli_version` and `originator`; `turn_context.payload` also has `approval_policy`, `sandbox_policy`, and `timezone`. Skills: reads of a `skills/<name>/SKILL.md` file. MCP: `tools.mcp__<server>__<tool>` calls inside `exec` code, or a `server` field.
+- **Claude:** on each entry, `timestamp`, `cwd`, `gitBranch`, `sessionId`, and `effort`. On assistant entries, `message.model` and `message.usage` (`input_tokens`, `output_tokens`, `cache_read_input_tokens`, `cache_creation_input_tokens`). Entries with `isSidechain: true`, and sibling files or directories, are subagent work. Also: `permissionDecision` on tool-result entries (`decision`, `source`, `reasonType`; join to the tool name through `message.content[].tool_use_id`), `permission-mode` entries (`permissionMode`), `entrypoint`, `version`, and `file-history-delta.trackingPath` (files the agent edited). Skills: `Skill` tool calls (`input.skill`) and slash commands (`<command-name>` in a user message). MCP: tool names `mcp__<server>__<tool>`.
+- **Codex:** `session_meta.payload` contains `cwd` and `git` (this can be null). `turn_context.payload` contains `model` and `effort`. `event_msg` with `payload.type=="token_count"` contains cumulative `info.total_token_usage`, so use deltas for each task; it also has `reasoning_output_tokens`. `session_meta.payload` also has `cli_version` and `originator`; `turn_context.payload` also has `approval_policy`, `sandbox_policy`, and `timezone`. Skills: reads of a `skills/<name>/SKILL.md` file. MCP: `tools.mcp__<server>__<tool>` calls inside `exec` code, or a `server` field. Subagents are separate session files whose `session_meta.payload.source` contains `subagent`. For example, `thread_source: "guardian_review"` marks the automatic reviewer of sandbox escalations. Its assistant messages are JSON with `outcome` (`allow` or `deny`).
 
-Do not load raw transcripts into context. Use `jq` to build a digest for each session: timestamps, user prompts, assistant text, tool names with short command lines, tool errors and denials, model, effort, token counts, permission decisions, skills, and MCP calls. Leave out tool output, reasoning, and injected system or instruction text. Measure the budget on this digest. Open the nearby raw turns only when you must understand a decision, reversal, or failure.
+Do not load raw transcripts into context. Use `jq` to build a digest for each session: timestamps, user prompts, assistant text, tool names with short command lines, tool errors and denials, model, effort, token counts, permission decisions, skills, and MCP calls. Leave out tool output, reasoning, and injected system or instruction text.
+
+Identify injected text by its structure, never by a keyword anywhere in the text. A user prompt can mention `AGENTS.md` or `<skill>`. Test each content item separately, because one turn can hold an injected item and a real prompt. Injected items include:
+
+- Codex: items that start with `<environment_context>`, `<skills_instructions>`, `<skill>`, `<turn_aborted>`, `<permissions`, or `# AGENTS.md instructions`, and `developer` role messages.
+- Claude: entries with `isMeta: true`, and text that starts with `<system-reminder>`, `<local-command-`, or `<command-` (but record a slash command's `<command-name>` as a skill). Measure the budget on this digest. Open the nearby raw turns only when you must understand a decision, reversal, or failure.
 
 Other sources, in the same scope and time span:
 
@@ -121,7 +126,7 @@ Use this format for each task. The second sub-bullet (the deep technical explana
   - Plain English summary in 1–2 sentences.
   - Deep technical explanation, when the task or decision is complex.
   - Decision: added a memoized `query_cache` object. Rejected: a Redis cache, because the data is only used for one request.
-  - *[categories=optimizing,building duration=58m host=claude model=claude-opus-5-5 effort=medium tokens_in=1.2M tokens_cached=980k tokens_out=40k tokens_reasoning=unknown sessions=ce6af167 repo=acme/app branches=perf-sql commits=2 lines=+120,-30 files=4 user_turns=6 tool_calls=42 tool_errors=3 perm_prompts=4 perm_denials=1 subagents=1 skills=none mcps=serena entrypoint=cli permission_mode=auto]*
+  - *[categories=optimizing,building duration=58m host=claude model=claude-opus-5-5 effort=medium tokens_in=1.2M tokens_cached=980k tokens_out=40k tokens_reasoning=unknown sessions=ce6af167 repo=acme/app branches=perf-sql commits=2 lines=+120,-30 files=4 user_turns=6 tool_calls=42 tool_errors=3 perm_prompts=1 perm_auto=12 perm_denials=1 subagents=1 skills=none mcps=serena entrypoint=cli permission_mode=auto]*
 ```
 
 Metadata rules, so that one regex can parse the line:
@@ -135,13 +140,18 @@ Metadata rules, so that one regex can parse the line:
 | Agent | `host` (`claude`, `codex`, or `claude,codex`), `model`, `effort` |
 | Tokens | `tokens_in`, `tokens_cached`, `tokens_out`, `tokens_reasoning` (Codex reports it; Claude does not), `sessions` (first 8 characters of each session ID) |
 | Git | `repo` (`owner/name` from the `origin` remote, else the folder name), `branches`, `commits`, `lines` (`+added,-removed` for commits and uncommitted changes in the task), `files` (count of files changed) |
-| Activity | `user_turns`, `tool_calls`, `tool_errors`, `perm_prompts` (approvals the user was asked for), `perm_denials` (denials by the user or by policy), `subagents` |
+| Activity | `user_turns`, `tool_calls`, `tool_errors`, `perm_prompts`, `perm_auto`, `perm_denials`, `subagents` |
 | Tools | `skills` (skill names), `mcps` (MCP server names, not tool names) |
 | Settings | `entrypoint` (`cli`, `ide`, `desktop`, `exec`, and similar), `permission_mode` (Claude permission mode; for Codex, `<approval_policy>/<sandbox_policy>`) |
 
 - Use `unknown` for a value that is not available, and `none` for an empty list. Do not leave out a required key.
 - `model` and `effort` are the values that were used most in the task. If more than one was used, list them comma-separated, most used first.
-- Include subagent tokens in the task that started the subagent.
+- Permission keys count tool calls only:
+  - `perm_prompts`: the user was asked to approve. Claude: `permissionDecision.source` starts with `user`. Codex: an approval request that the user answered.
+  - `perm_auto`: an automatic reviewer judged the call. Claude: `reasonType: classifier`. Codex: a `guardian` review. Static allow rules and permission modes do not count.
+  - `perm_denials`: a user, classifier, or guardian denied the call.
+  - Do not count decisions on tools that only ask the user something, such as Claude `AskUserQuestion` or Codex `request_user_input`. Their answers are user turns, not permissions.
+- Include subagent tokens in the task that started the subagent. For a reviewer subagent, such as Codex `guardian`, give each review's token delta to the task that holds the reviewed escalation, matched by timestamp. Count a subagent session once for each task it served.
 - Optional keys come after the required keys: `pr=<number>`, `issue=<ID>`, `parallel=true`.
 
 ## Output
