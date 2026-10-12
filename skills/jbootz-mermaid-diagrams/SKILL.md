@@ -39,6 +39,22 @@ naming every missing tool. When that happens, stop and tell the user which tool
 is missing and what output it blocks. Never hand-draw a diagram, switch to
 another renderer, or silently drop the diagram to work around a missing tool.
 
+## Troubleshooting SVG rendering
+
+- `Parse error` with a source line: fix the Mermaid syntax at that line and
+  render again through this skill's script.
+- `Failed to launch the browser process` with sandbox, permission, or macOS
+  Mach-port errors: Chromium failed before parsing the diagram. Keep the source
+  unchanged and request escalation for the same local render through this
+  skill's script, with the same input and output paths. Scope the request to
+  that render; retain approval checks. If escalation is unavailable or denied,
+  report the blocked SVG validation and preserve the source.
+
+`--no-sandbox` does not bypass the host harness's process restrictions; do not
+add it as a workaround for those restrictions. If the escalated render still
+fails to launch Chromium, report the remaining launch error rather than
+retrying unchanged or treating it as a Mermaid syntax error.
+
 ## Workflow
 
 1. Unless user requests repository artifacts, create a unique temp directory
