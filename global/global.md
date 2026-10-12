@@ -13,6 +13,15 @@ Check for tools required by the requested workflow before investing in it. If a 
 
 Use `jq` or `Read` to parse JSON, not `python -c`, unless python is truly needed for complex parsing `jq` can't handle.
 
+## Git writes in restricted sandboxes
+
+When the harness declares `.git` read-only and supports escalation, request
+escalation on the first authorized Git write (such as staging or committing)
+rather than trying the known-blocked write first. Keep local commits and remote
+pushes in separate commands. Before a push, identify the remote and destination
+branch and verify that the user's authorization covers that destination. All
+actions remain subject to the harness's approval checks.
+
 ## Jbootz.SCOUT delegation
 
 Use the `Jbootz.SCOUT` subagent for bounded mechanical work when the command is known or can be stated exactly and the result can be summarized as evidence. Examples: running specified tests, searching the repository, parsing verbose logs, and reporting aggregate counts with complete failure details.
