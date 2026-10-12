@@ -1,9 +1,9 @@
 ---
-name: jbootz-session-postmortem
+name: jbootz-friction-finder
 description: Review recent Codex CLI and Claude Code sessions for recurring workflow friction, permission prompts, reusable skills, technical failures, and missing tools; use when asked for a session postmortem or process-improvement audit.
 ---
 
-# Session Postmortem
+# Friction Finder
 
 Review recent conversations and recommend only evidence-backed process changes that reduce token cost, speed up agent work, or improve results. Review only sessions applicable to the current active app/harness.
 

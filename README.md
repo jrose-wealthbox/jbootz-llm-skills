@@ -125,7 +125,7 @@ The response should be exactly `Hello from jbootz-helloworld!`.
   SVG.
 - `jbootz-pr-file-comments`: posts exactly one file-level comment per file in
   a GitHub PR and verifies the count.
-- `jbootz-session-postmortem`: reviews recent Codex and Claude Code sessions
+- `jbootz-friction-finder`: reviews recent Codex and Claude Code sessions
   for process improvements.
 - `jbootz-work-summary`: summarizes recent Codex and Claude Code work in the
   current worktree, branch, or session as a tagged, chronological journal with
