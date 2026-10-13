@@ -44,6 +44,8 @@ Core workflow:
 ## When Working in crm-web
 
 - When local QA reports pending development migrations, run `bin/wealthbox exec bundle exec rails db:migrate`, then resume QA. A webserver restart does not apply migrations; do not hand this step back to the user.
+- Before initializing tenant-scoped models in runner, console, or QA seed scripts, establish the actor with `Current.set_user(user) { ... }` at the script entry point. `TenantManager` checks context during initialization; the scoped helper restores the previous context. Do not move context setup into commands or services. The implementation is `app/lib/current.rb`; see `docs/current-context-guidelines.md`.
+- When writing STI type discriminants whose allowlist names base classes, use `resource.class.base_class.name`. For example, comment resource types accept `Contact`, while `Person` and `Household` are Contact subclasses. Apply this normalization only when the allowlist requires the base class.
 
 ## Skills
 
