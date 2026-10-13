@@ -9,7 +9,7 @@ Try to break the change. Report only verified findings, classify every bug as in
 
 Review only; do not edit, commit, or post anything unless asked. When asked to fix findings, follow the request's scope and the repository's test and lint rules.
 
-To weigh another reviewer's findings instead of starting from scratch, use [Evaluate another review](#evaluate-another-review) after Steps 1 and 2.
+To weigh another reviewer's findings instead of starting from scratch, use [Evaluate another review](#evaluate-another-review) after Steps 1 and 2, or directly for local work with no PR.
 
 ## 1. Resolve the target and its real base
 
@@ -68,6 +68,15 @@ Use when the user supplies another reviewer's or agent's findings, for a PR, a b
 5. Implement agreed findings only when the user asked for implementation. Explain each rejected finding in one or two sentences.
 
 Report a table of finding, verdict, evidence, classification, and blocker or follow-up, then the tie-breaker outcome for each disagreement.
+
+### Local work without a PR
+
+When the findings concern commits or uncommitted changes on the current branch and no PR or ticket exists, skip Steps 1 and 2: the target is the commits or files the findings name.
+
+- Before verifying anything, confirm the pasted text contains findings. If it holds something else (your own earlier output, a summary, or nothing actionable), say so and ask for the review instead of reviewing it.
+- For each finding you agree with and were asked to fix, write a failing test that reproduces it first, then make the smallest fix; keep the reproducing test.
+- For each finding you reject, give evidence the user can hand back to the other reviewer as-is: `file:line`, the test or command run and its output, or the documented behavior that contradicts the claim.
+- Commit and push only as the repository's instructions or the user's request allow.
 
 ## Report
 
