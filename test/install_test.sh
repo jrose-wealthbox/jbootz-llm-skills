@@ -43,7 +43,7 @@ fail() {
 copy_fixture() {
   fixture=$1
   mkdir -p "$fixture"
-  cp -R "$repo_root/agents" "$repo_root/bin" "$repo_root/global" "$repo_root/install" "$repo_root/permissions" "$repo_root/skills" "$fixture/"
+  cp -R "$repo_root/agents" "$repo_root/bin" "$repo_root/claude" "$repo_root/global" "$repo_root/install" "$repo_root/permissions" "$repo_root/skills" "$fixture/"
   fixture=$(CDPATH='' cd -- "$fixture" && pwd -P)
 }
 
@@ -86,6 +86,9 @@ for skill in "$fixture/skills"/*; do
   assert_link_to "$claude_root/skills/$name" "$skill"
   assert_link_to "$codex_root/skills/$name" "$skill"
 done
+
+assert_link_to "$claude_root/statusline.sh" "$fixture/claude/statusline.sh"
+[ ! -e "$codex_root/statusline.sh" ] || fail "Codex received a Claude status line"
 
 assert_regular_file "$claude_root/agents/scout.md"
 assert_regular_file "$codex_root/agents/scout.toml"
@@ -155,6 +158,7 @@ mkdir -p "$codex_root"
 printf 'keep me\n' > "$claude_root/skills/jbootz-helloworld"
 mkdir -p "$claude_root/agents"
 printf 'keep this agent\n' > "$claude_root/agents/scout.md"
+printf 'my own status line\n' > "$claude_root/statusline.sh"
 printf '%s\n' 'user Claude instructions' > "$claude_root/CLAUDE.md"
 printf '%s\n' 'user Codex instructions' > "$codex_root/AGENTS.md"
 
@@ -164,6 +168,8 @@ fi
 
 [ "$(cat "$claude_root/skills/jbootz-helloworld")" = 'keep me' ] || fail "conflict was overwritten"
 [ "$(cat "$claude_root/agents/scout.md")" = 'keep this agent' ] || fail "agent conflict was overwritten"
+[ "$(cat "$claude_root/statusline.sh")" = 'my own status line' ] || fail "status line conflict was overwritten"
+assert_contains "$test_root/conflict-output" 'status line conflict'
 assert_contains "$claude_root/CLAUDE.md" 'user Claude instructions'
 assert_contains "$codex_root/AGENTS.md" 'user Codex instructions'
 assert_link_to "$codex_root/skills/jbootz-helloworld" "$fixture/skills/jbootz-helloworld"
@@ -184,6 +190,19 @@ case "$legacy_output" in
 esac
 assert_regular_file "$claude_root/agents/scout.md"
 assert_regular_file "$codex_root/agents/scout.toml"
+
+fixture="$test_root/statusline-copy-repo"
+copy_fixture "$fixture"
+claude_root="$test_root/statusline-copy-claude"
+codex_root="$test_root/statusline-copy-codex"
+mkdir -p "$claude_root"
+cp "$fixture/claude/statusline.sh" "$claude_root/statusline.sh"
+statusline_output=$(CLAUDE_CONFIG_DIR="$claude_root" CODEX_HOME="$codex_root" "$fixture/bin/install")
+case "$statusline_output" in
+  *'claude-code: migrated status line'*) ;;
+  *) fail "identical hand-installed status line was not reported as migrated" ;;
+esac
+assert_link_to "$claude_root/statusline.sh" "$fixture/claude/statusline.sh"
 
 fixture="$test_root/malformed-repo"
 copy_fixture "$fixture"

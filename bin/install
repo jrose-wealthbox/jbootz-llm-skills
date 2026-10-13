@@ -13,6 +13,7 @@ permissions_dir="$repo_root/permissions"
 codex_rules_source_dir="$permissions_dir/codex"
 claude_rules_source="$permissions_dir/claude-code/rules.json"
 claude_permissions_installer="$repo_root/bin/install-claude-permissions"
+claude_statusline_source="$repo_root/claude/statusline.sh"
 begin_marker='<!-- BEGIN jbootz-llm-skills global instructions -->'
 end_marker='<!-- END jbootz-llm-skills global instructions -->'
 errors=0
@@ -409,6 +410,42 @@ prune_stale_skill_links() {
   done
 }
 
+# Claude Code's status line script, linked from claude/statusline.sh so its
+# edits are versioned. A regular file identical to the source (a copy installed
+# by hand) is replaced by the link; anything else at the destination is a
+# conflict and is left untouched.
+install_claude_statusline() {
+  config_dir=$1
+  destination="$config_dir/statusline.sh"
+
+  if [ -L "$destination" ]; then
+    linked_source=$(readlink "$destination")
+    if [ "$linked_source" = "$claude_statusline_source" ]; then
+      printf 'claude-code: unchanged status line %s\n' "$destination"
+    else
+      error "claude-code status line conflict at $destination (links to $linked_source)"
+    fi
+  elif [ -e "$destination" ]; then
+    if [ -f "$destination" ] && cmp -s "$claude_statusline_source" "$destination"; then
+      temp_link="$destination.jbootz-llm-skills.$$"
+      if [ -e "$temp_link" ] || [ -L "$temp_link" ]; then
+        error "temporary status line link already exists: $temp_link"
+      elif ln -s "$claude_statusline_source" "$temp_link" && mv "$temp_link" "$destination"; then
+        printf 'claude-code: migrated status line %s -> %s\n' "$destination" "$claude_statusline_source"
+      else
+        rm -f "$temp_link"
+        error "could not migrate claude-code status line: $destination"
+      fi
+    else
+      error "claude-code status line conflict at $destination (existing file differs from repo source)"
+    fi
+  elif ln -s "$claude_statusline_source" "$destination"; then
+    printf 'claude-code: linked status line %s -> %s\n' "$destination" "$claude_statusline_source"
+  else
+    error "claude-code could not link status line at $destination"
+  fi
+}
+
 install_rendered_agent() {
   agent=$1
   source=$2
@@ -534,6 +571,10 @@ fi
 
 if [ ! -x "$agent_renderer" ]; then
   error "agent renderer is not executable: $agent_renderer"
+fi
+
+if [ ! -f "$claude_statusline_source" ] || [ ! -x "$claude_statusline_source" ]; then
+  error "Claude status line source is missing or not executable: $claude_statusline_source"
 fi
 
 rendered_agents_dir=$(mktemp -d "${TMPDIR:-/tmp}/jbootz-llm-skills-agents.XXXXXX") || {
@@ -675,6 +716,10 @@ for adapter in "$adapters_dir"/*; do
   done
 
   install_agent_definitions "$agent" "$target"
+
+  if [ "$agent" = claude-code ]; then
+    install_claude_statusline "$(dirname "$target")"
+  fi
 done
 
 if [ "$errors" -ne 0 ]; then

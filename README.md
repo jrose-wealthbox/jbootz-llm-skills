@@ -87,6 +87,15 @@ stops and identifies the config that needs reconciling. Add intentional rules
 to the source in this repo and run the installer again; it does not overwrite
 unrecognized rules.
 
+## Claude status line
+
+`claude/statusline.sh` is Claude Code's status line script. The installer links
+it to `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/statusline.sh`, so edit it here and
+the change is versioned. A hand-installed copy identical to the source is
+replaced by the link; a different file is reported as a conflict and left
+alone. The installer does not change `statusLine` in `settings.json`; point
+its command at the linked path (for example `bash ~/.claude/statusline.sh`).
+
 ## Skills
 
 Every direct child of `skills/` is one skill and must:
