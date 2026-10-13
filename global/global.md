@@ -2,10 +2,10 @@
 
 Canonical source for shared instructions.
 
-Keep it concise and project-independent. Agent-specific
+Keep concise and project-independent. Agent-specific
 behavior goes in relevant skill or harness config.
 
-When the user explicitly requests one-shot execution or opts out of optional workflow skills, skip those steps and act within the stated scope; retain required safety and validation checks.
+When user explicitly requests one-shot execution or opts out of optional workflow skills, skip those steps and act within the stated scope; retain required safety and validation checks.
 
 ## Required tools
 
@@ -17,10 +17,23 @@ Use `jq` or `Read` to parse JSON, not `python -c`, unless python is truly needed
 
 When the harness declares `.git` read-only and supports escalation, request
 escalation on the first authorized Git write (such as staging or committing)
-rather than trying the known-blocked write first. Keep local commits and remote
+rather than trying known-blocked write first. Keep local commits and remote
 pushes in separate commands. Before a push, identify the remote and destination
 branch and verify that the user's authorization covers that destination. All
-actions remain subject to the harness's approval checks.
+actions remain subject to harness's approval checks.
+
+## Code Style
+
+- Always include units in identifier names. Standard SI base unit abbreviations and prefixes (m, km, kg, s, etc) are okay.
+  - BAD: `READ_SIZE`, `LENGTH`
+  - GOOD: `READ_SIZE_BYTES`, `LENGTH_M`
+- Prioritize human readability
+- Ensure identifier names are descriptive and convey intent (and contents, if applicable)
+  - If changing existing code update identifier names to reflect intent/contents if needed
+
+## Session length
+
+After a feature is committed and pushed, if the conversation has been compacted, suggest starting a fresh session with a short handoff (what shipped, what is next, where lessons were recorded) instead of continuing: later turns otherwise carry every earlier feature's context.
 
 ## Jbootz.SCOUT delegation
 
