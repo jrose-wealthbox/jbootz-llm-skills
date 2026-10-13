@@ -58,27 +58,24 @@ Never run bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compo
 
 ## 2. Verify the environment only when needed
 
-Read service state first, and start the stack only when Rails is not running or has no URL. Record the application URL and runtime mode:
+Read service state first. Run this as a standalone tool invocation from the worktree root:
 
 ```bash
-status_json="$(bin/wealthbox status 2>/dev/null || true)"
-rails_running="$(jq -r '.services.rails.running // false' <<<"$status_json")"
-rails_url="$(jq -r '.services.rails.localhost // .services.rails.url // empty' <<<"$status_json")"
-
-if [ "$rails_running" != "true" ] || [ -z "$rails_url" ]; then
-  bin/wealthbox up -d --wait
-  status_json="$(bin/wealthbox status)"
-  rails_url="$(jq -r '.services.rails.localhost // .services.rails.url // empty' <<<"$status_json")"
-fi
-
-echo "QA application URL: $rails_url"
+bin/wealthbox status
 ```
 
-Use `services.rails.localhost` for headless `agent-browser`; the `*.wealthbox.local` URL in `services.rails.url` may not resolve there. Fall back to it only when `localhost` is absent.
+In Codex Docker/OrbStack environments, request `sandbox_permissions: "require_escalated"` for this standalone invocation when host socket access is needed. Keep the command spelling `bin/wealthbox status` or `./bin/wealthbox status` so the personal allow rule matches. Do not embed it in a variable assignment, command substitution, redirection, pipeline, or a larger shell script: those forms can prevent the narrow prefix rule from matching.
+
+Read the returned JSON and record `mode`, `services.rails.running`, and the Rails URL. Prefer `services.rails.localhost` for headless `agent-browser`; fall back to `services.rails.url` only when localhost is absent. Do not suppress stderr or replace a failed status command with empty output. A Docker/socket permission failure is not evidence that Rails is stopped.
+
+If valid status JSON shows Rails stopped or has no usable URL, run `bin/wealthbox up -d --wait` as a separate tool invocation. Then run `bin/wealthbox status` separately once more and read the fresh JSON. Do not start or restart services merely because status access was denied.
+
+Set `rails_url` to the observed URL in each shell invocation that needs it; shell variables do not persist between tool calls. Replace the placeholder below with that value, never a guessed port or domain.
 
 Confirm health through the QA browser session, which Step 5 reuses:
 
 ```bash
+rails_url="<resolved URL from the latest status JSON>"
 agent_browser_session="$(agent-browser session id --scope worktree --prefix crm-qa)"
 export AGENT_BROWSER_SESSION="$agent_browser_session"
 agent-browser open "$rails_url/healthz"
@@ -89,7 +86,7 @@ Healthy output is exactly `success`; anything else (an error list, routing error
 
 Run `bin/wealthbox up -d --wait` only when status shows Rails stopped, status lacks a usable URL, the health probe fails, or the request explicitly requires restart/rebuild. It is detached and waits for health, so the QA block can continue to its post-start status refresh. If a later check shows a stale or unhealthy stack, run it once and re-probe; do not repeat speculatively. Do not call `bin/wealthbox status rails --url` or duplicate status calls when JSON already provides the URL.
 
-If Docker access is denied, request the wrapper permission once. Inspect shared-service configuration warnings before stopping or restarting shared services.
+If Docker access is denied, retry the same standalone wrapper command with focused elevated access once; do not broaden Docker permissions or change socket permissions. Inspect shared-service configuration warnings before stopping or restarting shared services.
 
 ## 3. Prepare flags and seeds
 

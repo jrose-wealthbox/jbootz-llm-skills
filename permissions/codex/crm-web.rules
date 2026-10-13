@@ -29,9 +29,9 @@ prefix_rule(
 )
 
 prefix_rule(
-    pattern = ["bin/wealthbox", "status"],
+    pattern = [["bin/wealthbox", "./bin/wealthbox"], "status"],
     decision = "allow",
-    justification = "Read-only local Wealthbox status inspection",
+    justification = "Inspect Wealthbox service status; the wrapper can initialize package-cache volumes.",
 )
 
 prefix_rule(

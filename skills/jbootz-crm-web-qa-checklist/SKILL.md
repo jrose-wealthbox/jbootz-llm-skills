@@ -45,6 +45,8 @@ bin/wealthbox exec bundle install
 
 Never include bare `bundle`, `rails`, `rake`, `yarn`, `npm`, `npx`, or `docker compose`.
 
+Prescribe `bin/wealthbox status` as a standalone tool invocation from the worktree root, not inside a variable assignment, command substitution, redirection, pipeline, or larger script. For Codex Docker/OrbStack access, specify focused elevated execution when socket access is needed. Keep status errors visible; denied socket access is not evidence that services are stopped.
+
 Do not prescribe `bin/wealthbox up -d --wait` unconditionally. Inspect `bin/wealthbox status` for `services.rails.running` and the URL; use `services.rails.localhost` for headless `agent-browser`, falling back to `services.rails.url`. Probe health in the browser: `agent-browser open <url>/healthz`, then `agent-browser get text body`, expecting exactly `success`. The route is `/healthz`; crm-web has no `/healthcheck`. Never prescribe `curl`, `python3`, or another ad-hoc HTTP client for the probe: automatic permission review and sandboxes routinely deny them against local servers. Run `bin/wealthbox up -d --wait` only when Rails is not running, the URL is unavailable, the probe fails, or the request explicitly requires a restart/rebuild. Use the detached, health-waiting form so follow-up status and browser steps run after startup completes.
 
 If a flag or seed command cannot be verified in the repository, mark the prerequisite blocked; never invent commands.
