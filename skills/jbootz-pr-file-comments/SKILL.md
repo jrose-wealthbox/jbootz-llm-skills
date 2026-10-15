@@ -14,6 +14,9 @@ Post exactly one file-level review comment per target file in a GitHub pull requ
 - Post as the authenticated `gh` user. Never edit or delete anyone else's comments.
 - Start every comment body with `<Model> 🤖: `, where `<Model>` names the model writing the comment: family, version, and reasoning effort, for example `Opus 5.5 (high effort) 🤖: `. Take each part only from what the session states, such as the system prompt or the user; omit any part that it does not state, for example `Opus 5.5 🤖: `. Never guess a version or effort level. When the user specifies a different prefix or format, use theirs instead.
 - In a sandboxed host, `gh` may lack network access or the user's token there. A sandboxed `gh` auth or network failure does not prove `gh` is unauthenticated: rerun it with the host's network or elevated permission before stopping.
+- Do NOT add these comments to specs or other tests
+- Do NOT add these comments to documentation files
+- Add these comments ONLY to files containing programming code (examples: .c, .rb, .js, .ts)
 
 ## 1. Resolve the PR and its files
 
