@@ -7,6 +7,14 @@ description: Use when asked to add a file-level comment to each changed, added, 
 
 Post exactly one file-level review comment per target file in a GitHub pull request, then prove the count. A partial or duplicated set is a failed run.
 
+Use ASD-STE100 for all comments.
+
+## Length
+
+- 1-50 lines changed: 1 sentence
+- 51-200 lines changed: max of 2 sentences
+- 201+ lines changed: max of 3 sentences
+
 ## Scope
 
 - Default targets: every file in the PR, including removed and renamed files. Honor an explicit subset or exclusion.
