@@ -143,11 +143,15 @@ module ClaudeReview
       round = state.fetch('round') + 1
       round_dir = File.join(directory, format('%03d', round))
       Dir.mkdir(round_dir, 0700)
+      turn_context = if round == 1
+        "Claude takes the first reviewer turn. Independently review the source and requirements; no prior Codex review is supplied. Codex will respond afterward."
+      else
+        "Claude goes first in this round. The request includes the previous round's Codex turn; respond to it and provide your updated review before Codex takes this round's turn."
+      end
       prompt = <<~PROMPT
         Conversation round #{round} of #{state['rounds']}; repository: #{repo}
-        Codex has supplied its turn for this round below. This response is Claude's turn.
-        At the end, #{state['winner']} resolves remaining disagreements; Codex will synthesize the final review.
-        Request from Codex:
+        #{turn_context}
+        Review request:
         #{request}
 
         Current in-scope files follow as JSON data. These contents supersede earlier copies.
@@ -171,6 +175,8 @@ module ClaudeReview
         stable IDs (F001, F002, ...), severity, file/line, reasoning, and suggested correction.
         Preserve previous IDs and classify previous findings as resolved, remaining, or
         disputed before adding new ones. Separate verified findings from uncertainty.
+        Start from a fresh assessment on your first turn; do not seek out prior reviewer
+        opinions or conversation summaries. On later turns, assess the supplied Codex response.
         State explicitly when no actionable issues remain; list any checks you could not
         perform. Do not invent external-documentation verification without tool access.
       SYSTEM

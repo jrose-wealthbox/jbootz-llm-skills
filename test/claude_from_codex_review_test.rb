@@ -47,6 +47,7 @@ Dir.mktmpdir('claude-review-test') do |root|
   assert.call(status.success?, "start failed: #{err}")
   state = JSON.parse(File.read(File.join(review_dir, 'state.json')))
   call = JSON.parse(File.read(env['CALL_LOG']))
+  assert.call(!call['input'].include?("Codex has supplied its turn for this round"), 'Claude must run before the current Codex turn')
   assert.call(call['argv'].include?('--session-id'), 'start must name its session')
   assert.call(call['argv'][call['argv'].index('--model') + 1] == 'opus', 'default model')
   assert.call(call['argv'][call['argv'].index('--effort') + 1] == 'high', 'default effort')

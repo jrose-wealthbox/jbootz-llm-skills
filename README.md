@@ -110,7 +110,7 @@ Included skills:
   each bug as introduced by the branch or already on its base, judges the PR
   against its Linear issue, and can weigh another reviewer's findings.
 - `jbootz-claude-from-codex-review`: Codex-only, project-independent Claude
-  cross-review with persistent sessions, user-selected rounds and tie-breaker,
+  cross-review with a fresh Claude-first pass, persistent sessions, user-selected rounds and tie-breaker,
   temporary per-round evidence, and latest Opus/high defaults. Its wrapper tests use a fake CLI and make no model calls.
 - `jbootz-claude-review`: from Codex only, runs Claude Code as an independent,
   read-only reviewer of a diff or plan.

@@ -1,6 +1,6 @@
 interface:
   display_name: "Claude from Codex Review"
   short_description: "Persistent Claude cross-reviews from Codex"
-  default_prompt: "Use $jbootz-claude-from-codex-review to review this plan with Claude; ask me how many rounds and which reviewer wins remaining disagreements."
+  default_prompt: "Use $jbootz-claude-from-codex-review to have Claude take a fresh first look at this plan before Codex responds; ask me how many rounds and which reviewer wins remaining disagreements."
 policy:
   allow_implicit_invocation: false
