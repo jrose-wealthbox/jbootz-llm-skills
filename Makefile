@@ -4,6 +4,7 @@ install:
 	@mise exec -- ./bin/install
 
 test:
+	@mise exec -- ruby ./test/claude_from_codex_review_test.rb
 	@mise exec -- ./test/install_test.sh
 	@mise exec -- sh ./test/mermaid_test.sh
 

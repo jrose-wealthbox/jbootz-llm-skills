@@ -109,6 +109,9 @@ Included skills:
 - `jbootz-adversarial-review`: verified PR or branch review that classifies
   each bug as introduced by the branch or already on its base, judges the PR
   against its Linear issue, and can weigh another reviewer's findings.
+- `jbootz-claude-from-codex-review`: Codex-only, project-independent Claude
+  cross-review with persistent sessions, user-selected rounds and tie-breaker,
+  temporary per-round evidence, and latest Opus/high defaults. Its wrapper tests use a fake CLI and make no model calls.
 - `jbootz-claude-review`: from Codex only, runs Claude Code as an independent,
   read-only reviewer of a diff or plan.
 - `jbootz-crm-web-qa`: executes a crm-web browser QA plan with `agent-browser`
@@ -154,6 +157,8 @@ They stop with an error naming the missing tool rather than falling back:
   `jbootz-mermaid-diagrams` and the diagrams in both Gist explainers.
 - `agent-browser` and `jq`: the crm-web QA skills.
 - `claude`: `jbootz-claude-review`.
+- `claude` (authenticated, with `--safe-mode`), `ruby`, and `git`:
+  `jbootz-claude-from-codex-review`.
 
 `make test` exercises the Mermaid renderer and fails if `mermaid-ascii` or
 `mmdc` is missing.
