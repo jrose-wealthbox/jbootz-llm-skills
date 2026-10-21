@@ -53,3 +53,14 @@ prefix_rule(
         "astgrep -p foo -l ruby app",
     ],
 )
+
+prefix_rule(
+    pattern = [["bin/wealthbox", "./bin/wealthbox"], "status"],
+    decision = "allow",
+    justification = "Inspect Wealthbox service status; the wrapper can initialize package-cache volumes.",
+)
+prefix_rule(
+    pattern = ["bin/wealthbox", "runner"],
+    decision = "allow",
+    justification = "Essential for QA and other tasks",
+)

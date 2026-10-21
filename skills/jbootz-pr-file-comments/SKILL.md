@@ -7,13 +7,24 @@ description: Use when asked to add a file-level comment to each changed, added, 
 
 Post exactly one file-level review comment per target file in a GitHub pull request, then prove the count. A partial or duplicated set is a failed run.
 
+Use ASD-STE100 for all comments.
+
+## Length
+
+- 1-50 lines changed: 1 sentence
+- 51-200 lines changed: max of 2 sentences
+- 201+ lines changed: max of 3 sentences
+
 ## Scope
 
 - Default targets: every file in the PR, including removed and renamed files. Honor an explicit subset or exclusion.
 - Comment purpose comes from the request, for example the rationale for each change or deletion. Follow any example comment the user links; read it with `gh api` first.
 - Post as the authenticated `gh` user. Never edit or delete anyone else's comments.
-- Apply any prefix or format the user specifies, such as `🤖: `, to every comment.
+- Start every comment body with `<Model> 🤖: `, where `<Model>` names the model writing the comment: family, version, and reasoning effort, for example `Opus 5.5 (high effort) 🤖: `. Take each part only from what the session states, such as the system prompt or the user; omit any part that it does not state, for example `Opus 5.5 🤖: `. Never guess a version or effort level. When the user specifies a different prefix or format, use theirs instead.
 - In a sandboxed host, `gh` may lack network access or the user's token there. A sandboxed `gh` auth or network failure does not prove `gh` is unauthenticated: rerun it with the host's network or elevated permission before stopping.
+- Do NOT add these comments to specs or other tests
+- Do NOT add these comments to documentation files
+- Add these comments ONLY to files containing programming code (examples: .c, .rb, .js, .ts)
 
 ## 1. Resolve the PR and its files
 
@@ -41,6 +52,7 @@ A target is done when it already has one comment from the authenticated user. Re
 - Removed files: say why the file was deleted and where its behavior or coverage now lives, if anywhere.
 - Renamed files: name the previous path.
 - Match the tone and length of the user's example comment when one exists.
+- Begin each body with the prefix from Scope.
 - If the user asked to review drafts first, show path → body and wait for approval.
 
 ## 4. Post in one command
@@ -77,6 +89,14 @@ gh api repos/<owner>/<repo>/pulls/<number>/comments --paginate \
 ```
 
 Every target must have a count of exactly 1. Retry missing paths once. Report any path that still fails, with the API error.
+
+## GitHub display bugs
+
+The Step 5 API count is the source of truth. Do not delete or re-post comments to change what the web UI shows.
+
+- The file-tree badge in the "Files changed" view shows 2 for a file with one file-level comment. No hidden comments exist; the REST list, GraphQL review threads, and per-review comment lists all agree on 1.
+- A "Files changed" page that was open before posting can show the new badges without the comments. Ask the user to reload before investigating.
+- Do not work around the badge with a line-1 comment. A line comment must target a line in the diff, so it fails when the first hunk starts after line 1, on removed files, and on binary files. It also anchors the comment to an unrelated line and becomes outdated when that hunk changes.
 
 ## Report
 
