@@ -64,3 +64,9 @@ prefix_rule(
     decision = "allow",
     justification = "Essential for QA and other tasks",
 )
+
+prefix_rule(
+    pattern = ["agent-browser"],
+    decision = "allow",
+    justification = "Run the headless browser for local QA",
+)

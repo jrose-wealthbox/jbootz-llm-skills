@@ -1,0 +1,121 @@
+## Overview
+
+My Apple Music library is ~40K songs. Exported XML is ~88MB. "Date Added" spans ~15 years.
+
+I've put a lot of effort into rating my tracks and creating playlists.
+
+I'd like to use an LLM (such as yourself!) to help me find new music, based on music I already enjoy.
+
+## "New Releases" vs. "New-To-Me" Music
+
+When I say "new" or "new music", assume I mean "music that is new to me."
+
+If I am specifically looking for new releases, such as music released in the last N months, I'll specifically say "new releases" or similar.
+
+## Hunting For New Music
+
+Recommendations for should NOT include tracks I'm already familiar with.
+
+HOWEVER, with a 40K track library, it's possible there are unlistened-to tracks in my own library that I don't even know I'd love. Signals include:
+
+- Play count of 0 is obviously a very strong signal I have never listened to the track
+- Play count of 1 or 2 is a somewhat strong signal, especially if the last played date is > 2 years in past
+
+## Playlist Creation / Completion
+
+When I request playlist creation around a musical theme, your recommendations can include a mix of tracks already in my library and tracks not in my library.
+
+Songs I've rated highly are strong candidates for inclusion, although this is not an absolute signal. There may be a lot of great tracks in my library I haven't rated yet.
+
+Some of my playlists are based around a musical theme, genre, or subgenre (ex: "spooky folk psyche", "speed metal")
+
+Other playlists are more like a traditional mixtape or movie soundtrack - songs that are not necessarily from the same genre, but flow together.
+
+If it's not clear from the context of my request, ask me which kind of playlist I'm looking for.
+
+## Deep Cuts / Hidden Gems
+
+"Deep Cuts" and "Hidden Gems" (and similar) terms refer to songs by obscure artists that have few but fervent fans. Or obscure songs by popular artists, such as b-sides or soundtrack songs that get overlooked.
+
+## Possible Things to Consider When Finding Tracks to Recommend
+
+- Opinions from famous rock critics like
+    - Robert Christgau
+    - (to be expanded)
+- Opinions from respected music publications and blogs like Pitchfork, BrooklynVegan, and Stereogum
+- Pitchfork, specifically
+    - Year-end "best of" lists
+    - "Best New Music"
+    - Other lists
+
+## Live Performances
+
+I love recommendations for live performances.
+
+Consider recommending highly-regarded live performances of tracks I already love. (example: suppose "Hey Jude" is already in my library, but there's a well-loved live version on Youtube or Apple Music that is not in my library)
+
+Great sources of live performances:
+
+- KEXP.org (Youtube)
+- John Peel BBC Sessions (various)
+- (will be fleshed out more later)
+
+## Existing Track Ratings
+
+IMPORTANT: Many tracks in my library are rated with the older 1-5 stars rating method. Others are rated with the newer "Loved" attribute. It is important to take these both into consideration determining my musical taste.
+
+If a track is already in my library, but is unrated, that is a weak signal that I may enjoy similar music.
+
+## Sample Asks This App/Skill Should Cover
+
+"Find me music similar to artist X"
+
+"Find me music similar to arists X, Y, and Z"
+
+"Give me a playlist perfect for a Halloween party"
+
+"I have an existing playlist, 'Foo' -- what other tracks would fit well?"
+
+"Give me a party playlist of uptempo, glam rock tracks like early Sparks or Werewolves of London"
+
+"What are some tracks in my library with no rating or recent listens that I'd love?"
+
+"Recommend deep cuts from artists similar to the Beatles"
+
+"What are some lesser known deep cuts from the 2nd wave british ska revival of the late 70s-early 80s"
+
+"Scan my library and find some killer live performances of tracks I love on YouTube"
+
+## Music Sources I Have Access To
+
+Accompany your suggestions with links to the music. Here are the sources I have access to. Include links to all 3 if possible.
+
+- Apple Music
+- Spotify
+- YouTube / YouTube Music
+
+If you have recommendations not covered by them... that's OK too! I can download or buy physical copies.
+
+## Nice To Haves
+
+If running inside the Codex/ChatGPT desktop app, create Apple/Spotify/YouTube playlists for me.
+
+## Initial Architecture Idea
+
+I think this should be an LLM skill that does two things:
+
+- Knows how to convert my 88MB Apple Music exported library .XML into a format like SQLite that can be queried efficiently both in terms of tokens and computation.
+- Knows how to query this generated SQLlite file
+
+Beyond that, I would like to simply converse with the LLM "normally" -- I find that LLMs are already good at music recommendations. I basically just want to give them fast efficient access to my existing music library to "turbocharge" their recommendations.
+
+I am not "married" to this architecture whatsoever. Please suggest alternatives and compare/contrast their pros and cons with this initial architecture idea.
+
+IDEA: Perhaps there should be two separate skills: "Skill A"" that knows how to convert/query the Apple Music library, and "Skill B" that uses "Skill A". The possible utility here is that I might build other things that use "Skill A"
+
+## Future Wants
+
+We should choose an architeture that allows the following in future iterations of this app/skill.
+
+- Automatically perform the Apple Music library export (via AppleScript or Codex Computer Control)
+- Consider my Spotify and YouTube Music history and likes as well
