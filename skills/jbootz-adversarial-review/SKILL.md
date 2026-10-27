@@ -11,6 +11,7 @@ Review only; do not edit, commit, or post anything unless asked. When asked to f
 
 To weigh another reviewer's findings instead of starting from scratch, use [Evaluate another review](#evaluate-another-review) after Steps 1 and 2, or directly for local work with no PR.
 
+
 ## 1. Resolve the target and its real base
 
 ```bash
@@ -31,7 +32,33 @@ Diff from the merge base: `git diff "$(git merge-base origin/<base> <head>)"...<
 - Find the linked issue in the PR body or branch name and read its acceptance criteria and comments through the available Linear connector. If the connector is unavailable, say so; do not infer criteria from the code.
 - Treat the PR description's claims and QA steps as statements to verify, not evidence.
 
-## 3. Hunt for problems
+## 3. Premise Testing
+
+Answer the following:
+
+- Is the premise of the change correct?
+  - For fixes: 
+    - Does the problem really exist and is it worth solving?
+    - Could a real user ever encounter this problem, or is it purely theoretical?
+  - For user-facing enhancements:
+    - Does this solve a real problem users have?
+    - Are there downsides to the chosen approach from a user perspective?
+  - For under-the-hood enhancements:
+    - In what ways does this improve the codebase? 
+    - Does it succeed at at least one of the following?
+      - Reduction of duplicated code
+      - Greater performance
+      - Expansion of capabilities 
+      - Increased readability/maintainability
+      - Simplification of the modules' dependency graph(s)
+
+## 4. Architecture/Approach Review
+ 
+Did other architectural approaches exist? Does the PR description or other documentation explain why they were not chosen? Do you agree with the rationale(s) for why this architectural approach was chosen, and/or why alternatives were rejected?
+
+Consider other architectural approaches and compare/contrast them to the one chosen in terms of code complexity, performance, and code maintainability. Would any of them have been preferable to the one chosen?
+
+## 5. Hunt for problems
 
 Cover what the change can affect, not only the lines it touches:
 
@@ -43,7 +70,7 @@ Cover what the change can affect, not only the lines it touches:
 - **Tests:** whether specs would fail if the bug they target came back; missing negative and regression cases; specs that are redundant, only test the framework, or only assert that a constant or class exists.
 - **Readability:** names, control flow, and comments, using the `jbootz-human-readability` criteria. Report readability separately from bugs, with exact before/after snippets.
 
-## 4. Verify and classify every bug
+## 6. Verify and classify every bug
 
 - Prove each bug with a failing spec, a script, or a precise trace through the code. Delete throwaway specs and scripts when done, and restore any files a test run rewrote.
 - Before assigning severity or blocker status, verify that users can reach the defect through a current UI/API path or existing stored state. State any unverified prerequisite and qualify the impact; do not call an unproven scenario a current blocker.
@@ -53,7 +80,7 @@ Cover what the change can affect, not only the lines it touches:
 - To check the base, restore only the relevant files from it temporarily (`git checkout <base> -- <paths>`), rerun the reproduction, and restore them (`git checkout HEAD -- <paths>`). Never use a bare `git stash`; other sessions may share the stash.
 - Drop anything you could not verify, or report it under "Unverified" with what is missing.
 
-## 5. Optional second opinion
+## 7. Optional second opinion
 
 When asked, send the verified findings and the diff scope to an independent reviewer subagent, using the requested model and effort. Resolve each disagreement in at most two exchanges. Report what changed and any disagreement that remains, with both positions.
 
