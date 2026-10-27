@@ -18,19 +18,19 @@ BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby 
 
 If `mise` reports the parent config as untrusted, review it and run `mise trust ../mise.toml` once from the app root before retrying.
 
-Use Ruby 3.4.7 and install the locked dependencies from the app root if needed. If `status` reports a missing database or no imported snapshot, run the bootstrap helper when an XML export path was explicitly supplied by the user or is configured in `CRACKDEALER_XML_PATH`. If no explicit path is available, ask for one rather than guessing. The helper initializes and imports only when no snapshot exists; it leaves existing snapshots unchanged. Ask before refreshing a stale snapshot. This skill does not export from Apple Music.
+Use Ruby 3.4.7 and install the locked dependencies from the app root if needed with `mise exec ruby@3.4.7 -- bundle config set --local path vendor/bundle`, then `mise exec ruby@3.4.7 -- bundle install`. If `status` reports a missing database or no imported snapshot, use `import` when an XML export path was explicitly supplied by the user or is configured in `CRACKDEALER_XML_PATH`. If no explicit path is available, ask for one rather than guessing. Import initializes the database as needed; run it only after confirming no snapshot exists, or after the user authorizes a refresh. Ask before refreshing a stale snapshot. This skill does not export from Apple Music.
 
-When the XML path is known, run:
+When the XML path is known and an import is needed, run:
 
 ```sh
-BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer-bootstrap" --db "$DATABASE_PATH" --xml "$XML_PATH"
+BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" import "$XML_PATH"
 ```
 
-If `CRACKDEALER_XML_PATH` is configured, omit `--xml "$XML_PATH"` and let the helper read that variable.
+If `CRACKDEALER_XML_PATH` is configured, use its value as `XML_PATH`.
 
 ## Recommendation workflow
 
-1. Check `status`. If the database or imported snapshot is missing, run `bin/crackdealer-bootstrap` with an explicit XML export path when one is available; otherwise ask for the path. The helper leaves existing snapshots unchanged. Inspect `imported_at`; if the snapshot is stale, ask whether the user wants to refresh it.
+1. Check `status`. If the database or imported snapshot is missing, run `import` with an explicit XML export path when one is available; otherwise ask for the path. Preserve existing snapshots unless a refresh is authorized. Inspect `imported_at`; if the snapshot is stale, ask whether the user wants to refresh it.
 2. Decide whether the request is music discovery, playlist building, library rediscovery, a live-performance search, or a new-release request. “New music” means new to the user unless they ask for releases. Ask whether they want a coherent theme or a mixtape only when the request leaves that unclear.
 3. Build a request-specific taste neighborhood. Inspect named `tracks` results, relevant playlists and ordered members, and applicable history. Treat ratings, Loved, curated placement, and play counts as separate evidence. Preserve conflicts. Low play counts and missing ratings are weak or unknown signals, never proof of dislike.
 4. Create a session before candidate research so its context is available for feedback checks. Reuse `playlist:<playlist_key>` for an existing playlist; otherwise use the default `session:<id>` context or a meaningful shared context. Include seed artists, track keys, playlist keys, and short notes in the context object.

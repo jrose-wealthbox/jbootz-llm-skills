@@ -14,7 +14,7 @@ BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby 
 
 If `mise` reports the parent config as untrusted, review it and run `mise trust ../mise.toml` once from the app root before retrying.
 
-The default database is `data/crackdealer.sqlite3` under the app root. `--db PATH` takes precedence over `CRACKDEALER_DB`. `bin/crackdealer-bootstrap --xml XML_PATH` initializes and imports only if no snapshot exists; `CRACKDEALER_XML_PATH` can provide the path. Existing snapshots remain unchanged. Read commands never create or migrate a database. All successful non-help commands emit `{"data": ..., "meta": {"schema_version": 1, "imported_at": ...}}`. Errors go to stderr as `{"error":{"code":...,"message":...}}`; usage/input errors exit 2 and operational errors exit 1.
+The default database is `data/crackdealer.sqlite3` under the app root. `--db PATH` takes precedence over `CRACKDEALER_DB`. `import XML_PATH` initializes the database as needed and replaces the library snapshot while preserving history. Check `status` before importing; preserve existing snapshots unless a refresh is authorized. `CRACKDEALER_XML_PATH` can supply the explicit path to pass to `import`. Read commands never create or migrate a database. All successful non-help commands emit `{"data": ..., "meta": {"schema_version": 1, "imported_at": ...}}`. Errors go to stderr as `{"error":{"code":...,"message":...}}`; usage/input errors exit 2 and operational errors exit 1.
 
 ## Commands
 
