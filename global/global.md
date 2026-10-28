@@ -41,7 +41,13 @@ Use the `Jbootz.SCOUT` subagent for bounded mechanical work when the command is 
 
 Give `Jbootz.SCOUT` the exact command, working directory, constraints, and required report format. Jbootz.SCOUT observes and compresses evidence; the parent agent remains responsible for diagnosis, decisions, and edits. Do not delegate ambiguous requirements, root-cause analysis, architectural decisions, security judgments, code-quality validation, correctness validation, or source changes to Jbootz.SCOUT unless the user specifically asks.
 
-Filter large output with `rg`, `jq`, or bounded `sed` first. For semantic compression, give `Jbootz.SCOUT` one bounded read; request counts, relevant evidence, and complete failures. Avoid duplicate parent reads. Treat truncation as incomplete evidence: narrow or delegate, never raise the limit.
+## Bounded reads
+
+- Budget the combined output of parallel calls against the enclosing tool response limit, leaving room for wrappers and summaries. Several individually bounded reads can still overflow one response; split the batch when needed.
+- Start with filenames and counts (`rg --files`, `git diff --name-only`, or a JSON projection), then read the relevant content. Use line ranges such as `sed -n '120,180p' file` or JSON slices with a total count; page through the rest when complete coverage is required. Do not combine a full PR body, file list, and source dump in one result.
+- Filter tool discovery by the required capability and return matching names with short descriptions; do not print the full inventory.
+- Filter large output with `rg`, `jq`, or bounded `sed` before returning it. For semantic compression, give `Jbootz.SCOUT` one bounded read; request counts, relevant evidence, and complete failures. Avoid duplicate parent reads.
+- Treat truncation as incomplete evidence. Identify the missing files, fields, or ranges and read only those in smaller chunks, or delegate their extraction. Do not repeat the oversized read, raise the output limit, or treat an unread remainder as reviewed.
 
 ## Browser Automation
 

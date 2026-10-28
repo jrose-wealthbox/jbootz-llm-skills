@@ -14,10 +14,21 @@ To weigh another reviewer's findings instead of starting from scratch, use [Eval
 
 ## 1. Resolve the target and its real base
 
+Fetch compact metadata first; keep the PR body and file inventory out of this result.
+
 ```bash
-gh pr view <pr> --json number,url,state,baseRefName,headRefName,headRefOid,body,files
+gh pr view <pr> --json number,url,state,baseRefName,headRefName,headRefOid
 git fetch origin <baseRefName> <headRefName>
 ```
+
+Read the file inventory and PR body in separate, bounded calls:
+
+```bash
+gh pr view <pr> --json files --jq '{file_count: (.files | length), paths: [.files[0:40][].path]}'
+gh pr view <pr> --json body --jq '.body | {character_count: length, excerpt: .[0:4000]}'
+```
+
+Use `[40:80]` for the next file page and `[4000:8000]` for the next body chunk, continuing against the reported totals until the inventory and body are covered. These are page sizes, not review-scope limits. Narrow further if a page is truncated; do not print the full response as a fallback. Inspect source diffs by relevant file or hunk rather than combining them with these discovery reads.
 
 Without a PR argument, use the PR for the current branch; if none exists, review the branch against the repository's default branch.
 
