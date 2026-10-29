@@ -1,6 +1,6 @@
 # Crackdealer CLI reference
 
-Run commands from the app root (`docs/` in this repository). Install dependencies with `bundle install`; use Ruby 3.4.7. If the parent repository's `mise.toml` selects another version, prefix commands with `mise exec ruby@3.4.7 --`. The canonical form is:
+Run commands from the skill package root (`skills/jbootz-crackdealer/` in this repository). Install dependencies with `bundle install`; use Ruby 3.4.7. If the parent repository's `mise.toml` selects another version, prefix commands with `mise exec ruby@3.4.7 --`. The canonical form is:
 
 ```sh
 bundle exec ruby bin/crackdealer [--db PATH] COMMAND [OPTIONS]
@@ -12,7 +12,7 @@ To run from elsewhere, resolve the absolute app root and set `BUNDLE_GEMFILE`:
 BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" status
 ```
 
-If `mise` reports the parent config as untrusted, review it and run `mise trust ../mise.toml` once from the app root before retrying.
+If `mise` reports the parent config as untrusted, review it and run `mise trust ../../mise.toml` once from the app root before retrying.
 
 The default database is `data/crackdealer.sqlite3` under the app root. `--db PATH` takes precedence over `CRACKDEALER_DB`. `import XML_PATH` initializes the database as needed and replaces the library snapshot while preserving history. Check `status` before importing; preserve existing snapshots unless a refresh is authorized. `CRACKDEALER_XML_PATH` can supply the explicit path to pass to `import`. Read commands never create or migrate a database. All successful non-help commands emit `{"data": ..., "meta": {"schema_version": 1, "imported_at": ...}}`. Errors go to stderr as `{"error":{"code":...,"message":...}}`; usage/input errors exit 2 and operational errors exit 1.
 

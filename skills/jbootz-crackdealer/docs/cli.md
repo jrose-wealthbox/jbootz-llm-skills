@@ -1,12 +1,12 @@
 # CLI and schema reference
 
-Crackdealer is a local Ruby 3.4.7 application. Run commands from the app root (`docs/` in this repository):
+Crackdealer is a local Ruby 3.4.7 application. Run commands from the skill package root (`skills/jbootz-crackdealer/` in this repository):
 
 ```sh
 bundle exec ruby bin/crackdealer [--db PATH] COMMAND [OPTIONS]
 ```
 
-When running from another directory, set `BUNDLE_GEMFILE` to the app's absolute `Gemfile` path and pass the absolute path to `bin/crackdealer`. If the parent repository's `mise.toml` selects another Ruby, prefix the invocation with `mise exec ruby@3.4.7 --`. If `mise` reports that config as untrusted, review it and run `mise trust ../mise.toml` once from the app root before retrying. The default database lives at `data/crackdealer.sqlite3` under the app root. Path precedence is `--db`, `CRACKDEALER_DB`, then default. `init` creates the schema; `import` can initialize before replacing a snapshot. Other commands require an existing compatible database and do not migrate it.
+When running from another directory, set `BUNDLE_GEMFILE` to the app's absolute `Gemfile` path and pass the absolute path to `bin/crackdealer`. If the parent repository's `mise.toml` selects another Ruby, prefix the invocation with `mise exec ruby@3.4.7 --`. If `mise` reports that config as untrusted, review it and run `mise trust ../../mise.toml` once from the app root before retrying. The default database lives at `data/crackdealer.sqlite3` under the app root. Path precedence is `--db`, `CRACKDEALER_DB`, then default. `init` creates the schema; `import` can initialize before replacing a snapshot. Other commands require an existing compatible database and do not migrate it.
 
 ## Commands and result shapes
 
@@ -64,7 +64,7 @@ Reactions are `liked`, `disliked`, `already_known`, `wrong_fit`, `dont_recommend
 
 `feedback list` accepts either `--recommendation-id ID` or a prospective `--artist TEXT --title TEXT [--version-label TEXT]`, never both. It returns active events that match by scope: same recording for `track`, normalized artist for `artist`, and same recording plus matching context for `context`. A recorded target defaults to its session's context. A prospective target with no `--context-key` sees global track and artist reactions only. `history` shows only the selected recommendation's own active feedback; `feedback list` performs cross-recommendation matching. `history export` includes all raw events and retractions in deterministic JSON; there is no restore command in v1.
 
-Runnable payloads and a sequence that exercises every command are in [the skill CLI reference](../../skills/jbootz-crackdealer/references/cli.md).
+Runnable payloads and a sequence that exercises every command are in [the skill CLI reference](../references/cli.md).
 
 ## SQL access and query promotion
 

@@ -8,11 +8,11 @@
 
 **Tech stack:** Ruby 3.4.x, Bundler, `sqlite3` 2.10.x, Nokogiri 1.x, Minitest, Rake, Ruby's `OptionParser` and JSON libraries. No Rails, ORM, application server, embeddings, or streaming-service SDKs.
 
-**Spec:** [Original proposal](../spitballing/ideas.txt), supplemented and superseded where necessary by the accepted decisions below. This document includes the conversation decisions so the implementer does not need the original chat.
+**Spec:** [Original proposal](crackdealer-ideas.txt), supplemented and superseded where necessary by the accepted decisions below. This document includes the conversation decisions so the implementer does not need the original chat.
 
 ## Repository baseline and prerequisites
 
-At planning time, the only project file is `docs/spitballing/ideas.txt`; `docs/` is untracked and there are no tracked files. No actual library XML is present. `rg`, `jq`, `ast-grep`, `bundle`, and the SQLite shell are available. The selected Ruby is `/usr/bin/ruby`, version **2.6.10**, which is unsuitable for this plan.
+At planning time, only the original proposal existed and implementation had not begun. No actual library XML was present. `rg`, `jq`, `ast-grep`, `bundle`, and the SQLite shell are available. The selected Ruby is `/usr/bin/ruby`, version **2.6.10**, which is unsuitable for this plan.
 
 Before implementation, locate an already-installed Ruby 3.4.x through the user's existing version manager. If none exists, report the missing runtime and obtain direction for its installation; do not install gems into system Ruby or silently switch languages. Once available, pin that exact patch in `.ruby-version`, use `ruby "~> 3.4.0"` in `Gemfile`, and generate `Gemfile.lock`. Runtime dependencies: `sqlite3 "~> 2.10.0"`, `nokogiri ">= 1.18", "< 2"`; development dependencies: Minitest and Rake. Verify current compatibility with Context7 and lock the resolved versions.
 
@@ -34,8 +34,8 @@ The absence of a real export does **not** block implementation or synthetic acce
 
 ## Global constraints
 
-- All executable code stays in this repository. Package a repository-owned skill; do not install it globally during implementation.
-- Default database: `data/crackdealer.sqlite3` relative to the repository root, independent of the caller's working directory. Precedence: `--db PATH`, `CRACKDEALER_DB`, default. Expand `~`; treat values as filesystem paths, not SQLite URIs.
+- All executable code, tests, and skill documentation live under `skills/jbootz-crackdealer/`. Do not install the skill globally during implementation.
+- Default database: `data/crackdealer.sqlite3` relative to the skill package root, independent of the caller's working directory. Precedence: `--db PATH`, `CRACKDEALER_DB`, default. Expand `~`; treat values as filesystem paths, not SQLite URIs.
 - Ignore `/data/`, `/tmp/`, `/.bundle/`, `/vendor/bundle/`, and all `*.sqlite3`, `*.sqlite3-wal`, `*.sqlite3-shm`, `*.sqlite3-journal` files. Commit only synthetic fixtures, never real exports/history. Do not ignore every XML file: tests need fixtures.
 - Named queries use bound parameters. SQL passthrough uses a dedicated read-only connection and authorization rules; detecting a `SELECT` prefix is insufficient.
 - Imports are atomic and never recreate the entire database file. A failed import leaves the previous library snapshot and all history usable.
@@ -56,10 +56,13 @@ Each item has an owning task and a concrete test below:
 
 ## File map
 
+Paths are relative to the `skills/jbootz-crackdealer/` package root.
+
 | Path | Responsibility |
 |---|---|
 | `Gemfile`, `Gemfile.lock`, `.ruby-version`, `.gitignore`, `Rakefile` | Runtime, dependencies, data exclusions, test entry point |
 | `bin/crackdealer` | Minimal executable; delegate to CLI |
+| `bin/crackdealer-bootstrap` | Initialize the local database and import an explicitly supplied XML export when no snapshot exists |
 | `lib/crackdealer.rb` | Requires, version, shared error classes |
 | `lib/crackdealer/cli.rb` | Argument parsing, command routing, JSON output, exit codes |
 | `lib/crackdealer/database.rb` | Path resolution, writer/read connections, migrations |
@@ -71,8 +74,8 @@ Each item has an owning task and a concrete test below:
 | `lib/crackdealer/sql_reader.rb` | Restricted arbitrary SQL execution and result limits |
 | `lib/crackdealer/history.rb` | Sessions, recommendation batches, history reads/export |
 | `lib/crackdealer/feedback.rb` | Feedback events, retractions, effective feedback reads |
-| `skills/crackdealer/SKILL.md` | Conversational workflow and interpretation rules |
-| `skills/crackdealer/references/cli.md` | Exact CLI examples and JSON payloads |
+| `SKILL.md` | Conversational workflow and interpretation rules |
+| `references/cli.md` | Exact CLI examples and JSON payloads |
 | `README.md` | Setup, import, use, privacy, backup/restore, limitations |
 | `docs/cli.md` | Command and schema reference; promoting queries |
 | `test/*_test.rb`, `test/test_helper.rb`, `test/fixtures/` | Behavioral tests and synthetic exports |
@@ -308,7 +311,7 @@ When a task lists several files to run, execute the full `bundle exec ruby -Ites
 
 ### Task 7: Package the skill and user-facing documentation
 
-**Files:** Create `skills/crackdealer/SKILL.md`, `skills/crackdealer/references/cli.md`, `README.md`, `docs/cli.md`.
+**Files:** Create `SKILL.md`, `references/cli.md`, `README.md`, `docs/cli.md`.
 
 **Interfaces:** Skill only invokes documented CLI commands and available host research tools. CLI reference examples use temporary JSON files or stdin, not shell-interpolated prose. Consult the skill-creator instructions when authoring the actual skill; do not install it or edit global agent configuration.
 

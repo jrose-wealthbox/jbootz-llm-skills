@@ -4,7 +4,7 @@ Crackdealer is a local Ruby CLI and repository-owned skill for using an Apple Mu
 
 ## Start
 
-Use Ruby 3.4.7 and the locked bundle. If the parent repository's `mise.toml` selects another Ruby, select this subproject's version explicitly. From this app directory:
+Use Ruby 3.4.7 and the locked bundle. If the parent repository's `mise.toml` selects another Ruby, select this subproject's version explicitly. From this skill package directory:
 
 ```sh
 mise exec ruby@3.4.7 -- bundle config set --local path vendor/bundle
@@ -14,7 +14,7 @@ mise exec ruby@3.4.7 -- bundle exec ruby bin/crackdealer --db data/crackdealer.s
 mise exec ruby@3.4.7 -- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 status
 ```
 
-If `mise` reports the parent `mise.toml` as untrusted, review that file and run `mise trust ../mise.toml` once from this app directory, then rerun the command.
+If `mise` reports the parent `mise.toml` as untrusted, review that file and run `mise trust ../../mise.toml` once from this skill package directory, then rerun the command.
 
 The default database path is `data/crackdealer.sqlite3` under this directory. `--db PATH` overrides `CRACKDEALER_DB`, which overrides the default. Commands that read data require an initialized database and never migrate it. `import` initializes if needed, then atomically replaces the library snapshot. The `data/` directory and SQLite files are ignored by Git.
 
@@ -24,7 +24,7 @@ To invoke it from another working directory, resolve this directory as `PROJECT_
 BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" status
 ```
 
-The repository skill is in [`skills/jbootz-crackdealer/SKILL.md`](../skills/jbootz-crackdealer/SKILL.md). The runnable command and JSON reference is [`skills/jbootz-crackdealer/references/cli.md`](../skills/jbootz-crackdealer/references/cli.md); the concise command/schema reference is [`docs/cli.md`](docs/cli.md).
+The skill instructions are in [`SKILL.md`](SKILL.md). The runnable command and JSON reference are in [`references/cli.md`](references/cli.md); the concise command/schema reference is in [`docs/cli.md`](docs/cli.md).
 
 ## Keep the library current
 
