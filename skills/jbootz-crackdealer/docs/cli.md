@@ -68,7 +68,7 @@ Runnable payloads and a sequence that exercises every command are in [the skill 
 
 ## SQL access and query promotion
 
-`sql` opens an existing database with a read-only connection and an authorization policy. It accepts one prepared statement, rejects additional statements, and permits ordinary analytical reads, joins, CTEs, windows, JSON functions, and approved introspection PRAGMAs. It denies writes, attach/detach, mutable PRAGMAs, extension loading, and other authorization actions. Default timeout is 5,000 ms; `--timeout-ms 0` disables it. Default output limit is 100 rows; offset defaults to zero. BLOB results are returned as `{ "base64": "..." }`.
+`sql` opens an existing database with a read-only connection and an authorization policy. It accepts one prepared statement, rejects additional statements, and permits ordinary analytical reads, joins, CTEs, windows, JSON functions, and approved introspection PRAGMAs. It denies writes, attach/detach, mutable PRAGMAs, extension loading, and other authorization actions. Default timeout is 5,000 ms; `--timeout-ms` must be positive. Default output limit is 100 rows; offset defaults to zero. BLOB results are returned as `{ "base64": "..." }`.
 
 Example schema discovery:
 

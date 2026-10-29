@@ -100,7 +100,7 @@ class SqlReaderTest < CrackdealerTest
     end
   end
 
-  def test_applies_result_limit_and_offset_without_rewriting_sql
+  def test_applies_result_limit_and_offset
     result = @sql_reader.query(
       sql: 'SELECT source_track_id FROM tracks ORDER BY source_track_id',
       limit: 3,
@@ -112,6 +112,28 @@ class SqlReaderTest < CrackdealerTest
     complete_result = @sql_reader.query(sql: 'SELECT source_track_id FROM tracks ORDER BY source_track_id', limit: 0)
     assert_equal 10, complete_result.fetch(:rows).length
     refute complete_result.fetch(:truncated)
+  end
+
+  def test_pages_a_query_that_already_has_a_limit
+    result = @sql_reader.query(
+      sql: 'SELECT source_track_id FROM tracks ORDER BY source_track_id LIMIT 6',
+      limit: 2,
+      offset: 3
+    )
+
+    assert_equal [[4], [5]], result.fetch(:rows)
+    assert result.fetch(:truncated)
+  end
+
+  def test_pages_queries_with_trailing_comments_and_unlimited_results
+    result = @sql_reader.query(
+      sql: "-- library tracks\nSELECT source_track_id FROM tracks ORDER BY source_track_id -- selected tracks",
+      limit: 0,
+      offset: 8
+    )
+
+    assert_equal [[9], [10]], result.fetch(:rows)
+    refute result.fetch(:truncated)
   end
 
   def test_encodes_blob_values_as_base64
@@ -189,6 +211,7 @@ class SqlReaderTest < CrackdealerTest
     assert_equal 'invalid_input', assert_raises(Crackdealer::Error) { @sql_reader.query(sql: '  ') }.code
     assert_equal 'invalid_input', assert_raises(Crackdealer::Error) { @sql_reader.query(sql: 'SELECT 1', limit: -1) }.code
     assert_equal 'invalid_input', assert_raises(Crackdealer::Error) { @sql_reader.query(sql: 'SELECT 1', offset: -1) }.code
+    assert_equal 'invalid_input', assert_raises(Crackdealer::Error) { @sql_reader.query(sql: 'SELECT 1', timeout_ms: 0) }.code
   end
 
   private

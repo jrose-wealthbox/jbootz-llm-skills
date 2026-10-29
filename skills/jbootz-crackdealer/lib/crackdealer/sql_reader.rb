@@ -79,7 +79,16 @@ module Crackdealer
         end
 
         columns = statement.columns
-        result_set = statement.execute
+        paged_sql = pageable_sql(sql)
+        if paged_sql
+          statement.close
+          statement = connection.prepare("SELECT * FROM (\n#{paged_sql}\n) LIMIT ? OFFSET ?")
+          page_limit = limit.zero? ? -1 : limit + 1
+          result_set = statement.execute(page_limit, offset)
+          offset = 0
+        else
+          result_set = statement.execute
+        end
         rows = []
         truncated = false
         row_index = 0
@@ -103,6 +112,12 @@ module Crackdealer
       end
     end
 
+    def pageable_sql(sql)
+      return nil unless sql.match?(/\A(?:\s|--[^\n]*(?:\n|\z)|\/\*.*?\*\/)*(?:SELECT|WITH)\b/im)
+
+      sql.sub(/;\s*\z/, '').strip
+    end
+
     def encode_value(value)
       is_blob = value.is_a?(SQLite3::Blob) || (value.is_a?(String) && value.encoding == Encoding::BINARY)
       return value unless is_blob
@@ -117,8 +132,8 @@ module Crackdealer
       unless limit.is_a?(Integer) && limit >= 0 && offset.is_a?(Integer) && offset >= 0
         raise Error.new('SQL limit and offset must be nonnegative integers.', code: 'invalid_input', exit_status: 2)
       end
-      unless timeout_ms.is_a?(Integer) && timeout_ms >= 0
-        raise Error.new('SQL timeout_ms must be a nonnegative integer.', code: 'invalid_input', exit_status: 2)
+      unless timeout_ms.is_a?(Integer) && timeout_ms.positive?
+        raise Error.new('SQL timeout_ms must be a positive integer.', code: 'invalid_input', exit_status: 2)
       end
     end
 

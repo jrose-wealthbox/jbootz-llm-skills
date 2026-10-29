@@ -138,7 +138,7 @@ Use `schema` to inspect the live table/column definitions. Principal tables are 
 
 ## Read-only SQL
 
-SQL accepts one prepared statement. Ordinary reads, joins, aggregates, CTEs, recursive CTEs, windows, JSON functions, and read-only schema PRAGMAs are available. Writes, attachment, mutable PRAGMAs, extension loading, and multiple statements are denied. A final semicolon followed by whitespace is allowed; a trailing comment after that semicolon may be rejected. The default timeout is 5 seconds and the default output limit is 100 rows; `--timeout-ms 0` disables the timeout and `--limit 0` removes the output cap.
+SQL accepts one prepared statement. Ordinary reads, joins, aggregates, CTEs, recursive CTEs, windows, JSON functions, and read-only schema PRAGMAs are available. Writes, attachment, mutable PRAGMAs, extension loading, and multiple statements are denied. A final semicolon followed by whitespace is allowed; a trailing comment after that semicolon may be rejected. The default timeout is 5 seconds and `--timeout-ms` must be positive. The default output limit is 100 rows; `--limit 0` removes the output cap.
 
 The runnable example above joins library tracks and playlists to linked recommendations, sessions, and raw feedback events. For schema introspection:
 
