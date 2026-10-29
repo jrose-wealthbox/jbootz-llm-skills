@@ -14,6 +14,7 @@ Use ASD-STE100 for all comments.
 - 1-50 lines changed: 1 sentence
 - 51-200 lines changed: max of 2 sentences
 - 201+ lines changed: max of 3 sentences
+- If the file is a new class or module introduced in this PR: Minimum 2 sentences. Be sure to explain its responsibilties and why it's necessary.
 
 ## Scope
 
