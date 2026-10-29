@@ -4,14 +4,14 @@ Crackdealer is a local Ruby CLI and repository-owned skill for using an Apple Mu
 
 ## Start
 
-Use Ruby 3.4.7 and the locked bundle. If the parent repository's `mise.toml` selects another Ruby, select this subproject's version explicitly. From this skill package directory:
+Use Ruby 4.0.9and the locked bundle. If the parent repository's `mise.toml` selects another Ruby, select this subproject's version explicitly. From this skill package directory:
 
 ```sh
-mise exec ruby@3.4.7 -- bundle config set --local path vendor/bundle
-mise exec ruby@3.4.7 -- bundle install
-mise exec ruby@3.4.7 -- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 init
-mise exec ruby@3.4.7 -- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 import /path/to/AppleMusic-Library.xml
-mise exec ruby@3.4.7 -- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 status
+mise exec ruby@4.0.9-- bundle config set --local path vendor/bundle
+mise exec ruby@4.0.9-- bundle install
+mise exec ruby@4.0.9-- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 init
+mise exec ruby@4.0.9-- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 import /path/to/AppleMusic-Library.xml
+mise exec ruby@4.0.9-- bundle exec ruby bin/crackdealer --db data/crackdealer.sqlite3 status
 ```
 
 If `mise` reports the parent `mise.toml` as untrusted, review that file and run `mise trust ../../mise.toml` once from this skill package directory, then rerun the command.
@@ -21,7 +21,7 @@ The default database path is `data/crackdealer.sqlite3` under this directory. `-
 To invoke it from another working directory, resolve this directory as `PROJECT_ROOT`, then use its Gemfile and absolute executable path:
 
 ```sh
-BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" status
+BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@4.0.9-- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" status
 ```
 
 The skill instructions are in [`SKILL.md`](SKILL.md). The runnable command and JSON reference are in [`references/cli.md`](references/cli.md); the concise command/schema reference is in [`docs/cli.md`](docs/cli.md).
