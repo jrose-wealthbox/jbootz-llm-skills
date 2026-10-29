@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Major Version</key>
+    <integer>1</integer>
+    <key>Minor Version</key>
+    <integer>1</integer>
+    <key>Date</key>
+    <date>2026-10-23T12:00:00Z</date>
+    <key>Application Version</key>
+    <string>1.4.3</string>
+    <key>Library Persistent ID</key>
+    <string>AAAAAAAAAAAAAAAA</string>
+    <key>Tracks</key>
+    <dict>
+      <key>1</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>1</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000001</string>
+        <key>Name</key>
+        <string>Old Favorite</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>100</integer>
+        <key>Play Count</key>
+        <integer>42</integer>
+        <key>Date Added</key>
+        <date>2010-01-02T03:04:05Z</date>
+        <key>Play Date UTC</key>
+        <date>2020-01-01T00:00:00Z</date>
+        <key>Compilation</key>
+        <false/>
+        <key>Sample Real</key>
+        <real>3.5</real>
+        <key>Sample Data</key>
+        <data>AAECAw==</data>
+        <key>Sample False</key>
+        <false/>
+      </dict>
+      <key>2</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>2</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000002</string>
+        <key>Name</key>
+        <string>Unheard</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Loved</key>
+        <false/>
+        <key>Play Count</key>
+        <integer>0</integer>
+        <key>Album Rating</key>
+        <integer>100</integer>
+      </dict>
+      <key>3</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>3</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000003</string>
+        <key>Name</key>
+        <string>Explicit Reject &amp; Leave</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>20</integer>
+        <key>Loved</key>
+        <false/>
+        <key>Play Count</key>
+        <integer>1</integer>
+      </dict>
+      <key>4</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>4</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000004</string>
+        <key>Name</key>
+        <string>Conflict</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>20</integer>
+        <key>Loved</key>
+        <true/>
+        <key>Play Count</key>
+        <integer>15</integer>
+        <key>Play Date UTC</key>
+        <date>2026-10-01T00:00:00Z</date>
+      </dict>
+      <key>5</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>5</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000005</string>
+        <key>Name</key>
+        <string>Café Under Rain</string>
+        <key>Artist</key>
+        <string>Björk</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Björk</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>100</integer>
+        <key>Rating Computed</key>
+        <true/>
+      </dict>
+      <key>6</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>6</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000006</string>
+        <key>Name</key>
+        <string>At Cutoff</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>80</integer>
+        <key>Rating Computed</key>
+        <false/>
+        <key>Play Count</key>
+        <integer>10</integer>
+        <key>Play Date UTC</key>
+        <date>2024-10-23T12:00:00Z</date>
+      </dict>
+      <key>7</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>7</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000007</string>
+        <key>Name</key>
+        <string>Missing Date</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>0</integer>
+        <key>Loved</key>
+        <false/>
+        <key>Play Count</key>
+        <integer>12</integer>
+      </dict>
+      <key>8</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>8</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000008</string>
+        <key>Name</key>
+        <string>Video</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>100</integer>
+        <key>Loved</key>
+        <true/>
+        <key>Play Count</key>
+        <integer>20</integer>
+        <key>Music Video</key>
+        <true/>
+      </dict>
+      <key>9</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>9</integer>
+        <key>Persistent ID</key>
+        <string>0000000000000009</string>
+        <key>Name</key>
+        <string>Two Plays</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Play Count</key>
+        <integer>2</integer>
+        <key>Play Date UTC</key>
+        <date>2020-01-01T00:00:00Z</date>
+      </dict>
+      <key>10</key>
+      <dict>
+        <key>Track ID</key>
+        <integer>10</integer>
+        <key>Persistent ID</key>
+        <string>000000000000000A</string>
+        <key>Name</key>
+        <string>Neutral Three</string>
+        <key>Artist</key>
+        <string>Aurora</string>
+        <key>Album</key>
+        <string>First Album</string>
+        <key>Album Artist</key>
+        <string>Aurora</string>
+        <key>Genre</key>
+        <string>Folk</string>
+        <key>Year</key>
+        <integer>2005</integer>
+        <key>Total Time</key>
+        <integer>180000</integer>
+        <key>Rating</key>
+        <integer>60</integer>
+        <key>Rating Computed</key>
+        <false/>
+        <key>Play Count</key>
+        <integer>0</integer>
+      </dict>
+    </dict>
+    <key>Playlists</key>
+    <array>
+      <dict>
+        <key>Playlist ID</key>
+        <integer>1</integer>
+        <key>Persistent ID</key>
+        <string>1111111111111111</string>
+        <key>Name</key>
+        <string>Shared &amp; Name</string>
+        <key>Playlist Items</key>
+        <array>
+          <dict>
+            <key>Track ID</key>
+            <integer>1</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>1</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>999</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>6</integer>
+          </dict>
+        </array>
+      </dict>
+      <dict>
+        <key>Playlist ID</key>
+        <integer>2</integer>
+        <key>Persistent ID</key>
+        <string>2222222222222222</string>
+        <key>Name</key>
+        <string>Shared &amp; Name</string>
+        <key>Playlist Items</key>
+        <array>
+          <dict>
+            <key>Track ID</key>
+            <integer>1</integer>
+          </dict>
+        </array>
+      </dict>
+      <dict>
+        <key>Playlist ID</key>
+        <integer>3</integer>
+        <key>Persistent ID</key>
+        <string>3333333333333333</string>
+        <key>Name</key>
+        <string>Smart Picks</string>
+        <key>Playlist Items</key>
+        <array>
+          <dict>
+            <key>Track ID</key>
+            <integer>5</integer>
+          </dict>
+        </array>
+        <key>Smart Info</key>
+        <data>AA==</data>
+        <key>Smart Criteria</key>
+        <string>genre contains Folk</string>
+      </dict>
+      <dict>
+        <key>Playlist ID</key>
+        <integer>4</integer>
+        <key>Persistent ID</key>
+        <string>4444444444444444</string>
+        <key>Name</key>
+        <string>Empty Folder</string>
+        <key>Playlist Items</key>
+        <array>
+        </array>
+        <key>Folder</key>
+        <true/>
+      </dict>
+      <dict>
+        <key>Playlist ID</key>
+        <integer>5</integer>
+        <key>Persistent ID</key>
+        <string>5555555555555555</string>
+        <key>Name</key>
+        <string>Music Library</string>
+        <key>Playlist Items</key>
+        <array>
+          <dict>
+            <key>Track ID</key>
+            <integer>1</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>2</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>3</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>4</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>5</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>6</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>7</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>8</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>9</integer>
+          </dict>
+          <dict>
+            <key>Track ID</key>
+            <integer>10</integer>
+          </dict>
+        </array>
+        <key>Master</key>
+        <true/>
+      </dict>
+    </array>
+  </dict>
+</plist>

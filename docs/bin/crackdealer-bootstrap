@@ -1,0 +1,119 @@
+#!/usr/bin/env ruby
+
+require 'json'
+require 'optparse'
+require_relative '../lib/crackdealer'
+
+module Crackdealer
+  class Bootstrap
+    HELP_TEXT = <<~HELP.freeze
+      Usage: crackdealer-bootstrap [--db PATH] [--xml XML_PATH]
+
+      Create the default database and import XML only when no snapshot exists.
+      If --xml is omitted, CRACKDEALER_XML_PATH is used.
+      Existing imported snapshots are left unchanged.
+    HELP
+
+    def self.run(argv, out: $stdout, err: $stderr, environment: ENV)
+      arguments = argv.dup
+      options = { database_path: nil, xml_path: nil, help: false }
+      parser = OptionParser.new do |option_parser|
+        option_parser.on('--db PATH', 'Database path') { |path| options[:database_path] = path }
+        option_parser.on('--xml XML_PATH', 'Apple Music XML export path') { |path| options[:xml_path] = path }
+        option_parser.on('-h', '--help', 'Show help') { options[:help] = true }
+      end
+      parser.parse!(arguments)
+
+      if options.fetch(:help)
+        out.write(HELP_TEXT)
+        return 0
+      end
+      raise invalid_input_error('Unexpected positional arguments.') unless arguments.empty?
+
+      database_path = Database.resolve_path(override: options.fetch(:database_path), env: environment)
+      database = Database.new(path: database_path)
+      snapshot = existing_snapshot(database)
+      if snapshot
+        emit_success(
+          {
+            status: 'ready',
+            imported: false,
+            track_count: snapshot.fetch('track_count'),
+            playlist_count: snapshot.fetch('playlist_count'),
+            imported_at: snapshot.fetch('imported_at')
+          },
+          snapshot.fetch('imported_at'),
+          out
+        )
+        return 0
+      end
+
+      xml_path = options.fetch(:xml_path) || environment['CRACKDEALER_XML_PATH']
+      unless xml_path.is_a?(String) && !xml_path.strip.empty?
+        raise invalid_input_error(
+          'No imported snapshot exists. Provide --xml XML_PATH or set CRACKDEALER_XML_PATH.'
+        )
+      end
+      unless File.file?(xml_path)
+        raise Error.new('Apple Music export file does not exist.', code: 'io_error')
+      end
+
+      import_report = Importer.new(database: database).import(path: xml_path)
+      emit_success(
+        { status: 'imported', imported: true, import: import_report },
+        import_report.fetch(:imported_at),
+        out
+      )
+      0
+    rescue Crackdealer::Error => error
+      emit_error(error, err)
+      error.exit_status
+    rescue OptionParser::ParseError => error
+      emit_error(invalid_input_error(error.message), err)
+      2
+    rescue SQLite3::Exception => error
+      emit_error(Error.new('Database operation failed.', code: 'database_error'), err)
+      1
+    rescue SystemCallError, IOError => error
+      emit_error(Error.new('File operation failed.', code: 'io_error'), err)
+      1
+    end
+
+    def self.existing_snapshot(database)
+      return nil unless File.file?(database.path)
+
+      database.with_read do |connection|
+        connection.get_first_row(
+          'SELECT imported_at, track_count, playlist_count FROM library_import WHERE id = 1'
+        )
+      end
+    rescue Error => error
+      return nil if error.message == 'Database is not initialized with a supported schema.'
+
+      raise
+    end
+    private_class_method :existing_snapshot
+
+    def self.emit_success(data, imported_at, out)
+      out.puts(
+        JSON.generate(
+          data: data,
+          meta: { schema_version: Database::SCHEMA_VERSION, imported_at: imported_at }
+        )
+      )
+    end
+    private_class_method :emit_success
+
+    def self.emit_error(error, err)
+      err.puts(JSON.generate(error: { code: error.code, message: error.message }))
+    end
+    private_class_method :emit_error
+
+    def self.invalid_input_error(message)
+      Error.new(message, code: 'invalid_input', exit_status: 2)
+    end
+    private_class_method :invalid_input_error
+  end
+end
+
+exit Crackdealer::Bootstrap.run(ARGV)
