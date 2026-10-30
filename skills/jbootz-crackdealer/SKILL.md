@@ -10,20 +10,20 @@ Use this skill when a music request can benefit from the user's Apple Music libr
 
 ## Run the repository CLI
 
-The app root is `skills/jbootz-crackdealer/` in this repository. The repository root is two levels above this skill directory; set `PROJECT_ROOT` to that repository root's `skills/jbootz-crackdealer` directory. Use it for `Gemfile`, `bin/crackdealer`, and the default `data/crackdealer.sqlite3`. The database stays on the user's machine. Use Ruby 3.4.7; if the parent repository's `mise.toml` selects another version, run through `mise exec ruby@3.4.7`. From any working directory, set `BUNDLE_GEMFILE` and pass the absolute executable and database paths:
+The app root is `skills/jbootz-crackdealer/` in this repository. The repository root is two levels above this skill directory; set `PROJECT_ROOT` to that repository root's `skills/jbootz-crackdealer` directory. Use it for `Gemfile`, `bin/crackdealer`, and the default `data/crackdealer.sqlite3`. The database stays on the user's machine. Use Ruby 4.0.9; if the parent repository's `mise.toml` selects another version, run through `mise exec ruby@4.0.9`. From any working directory, set `BUNDLE_GEMFILE` and pass the absolute executable and database paths:
 
 ```sh
-BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" status
+BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@4.0.9 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" status
 ```
 
 If `mise` reports the parent config as untrusted, review it and run `mise trust ../../mise.toml` once from the app root before retrying.
 
-Use Ruby 3.4.7 and install the locked dependencies from the app root if needed with `mise exec ruby@3.4.7 -- bundle config set --local path vendor/bundle`, then `mise exec ruby@3.4.7 -- bundle install`. If `status` reports a missing database or no imported snapshot, use `import` when an XML export path was explicitly supplied by the user or is configured in `CRACKDEALER_XML_PATH`. If no explicit path is available, ask for one rather than guessing. Import initializes the database as needed; run it only after confirming no snapshot exists, or after the user authorizes a refresh. Ask before refreshing a stale snapshot. This skill does not export from Apple Music.
+Use Ruby 4.0.9 and install the locked dependencies from the app root if needed with `mise exec ruby@4.0.9 -- bundle config set --local path vendor/bundle`, then `mise exec ruby@4.0.9 -- bundle install`. If `status` reports a missing database or no imported snapshot, use `import` when an XML export path was explicitly supplied by the user or is configured in `CRACKDEALER_XML_PATH`. If no explicit path is available, ask for one rather than guessing. Import initializes the database as needed; run it only after confirming no snapshot exists, or after the user authorizes a refresh. Ask before refreshing a stale snapshot. This skill does not export from Apple Music.
 
 When the XML path is known and an import is needed, run:
 
 ```sh
-BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@3.4.7 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" import "$XML_PATH"
+BUNDLE_GEMFILE="$PROJECT_ROOT/Gemfile" mise exec ruby@4.0.9 -- bundle exec ruby "$PROJECT_ROOT/bin/crackdealer" --db "$DATABASE_PATH" import "$XML_PATH"
 ```
 
 If `CRACKDEALER_XML_PATH` is configured, use its value as `XML_PATH`.
